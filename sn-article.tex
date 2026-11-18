@@ -440,22 +440,7 @@ with the lightweight router, this design reduces interference across
 heterogeneous domains and improves prediction consistency compared with
 training a single model on merged data.
 
-The framework supports both request-level and aggregate auditing. Individual
-predictions provide a reference for assessing whether the reported usage of a
-particular interaction is consistent with its estimated reasoning complexity.
-Aggregate estimates are especially important for high-volume API workloads,
-where small per-request discrepancies can accumulate into substantial billing
-differences. The low aggregated errors achieved by {\n} show that its predictions
-remain stable across repeated queries and can therefore support large-scale
-auditing.
-
-Our threshold analysis further shows that {\n} maintains stronger accuracy than
-the baselines across a broad range of error tolerances. Its advantage under
-stricter thresholds enables the detection of relatively small discrepancies,
-while cumulative analysis can reveal persistent inflation that may be difficult
-to identify from a single request. Together, these results show that predictive
-auditing can support both fine-grained inspection and long-term monitoring of
-hidden-token usage.
+Individual predictions provide a reference for follow-up, but reasoning lengths vary substantially across requests. At a nominal 5\% false-positive rate, PALACE detected 11.3--36.8\% of individual requests with 30\% overreporting across the four domains. For batches of 50 requests, the detection rate reached 92.9\% with a 4.9\% false-positive rate. This increase shows how aggregating requests makes systematic overreporting easier to detect.
 
 Predictive auditing provides a different deployment trade-off from
 cryptographic verification. Cryptographic methods can offer stronger guarantees
