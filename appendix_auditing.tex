@@ -1,0 +1,67 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,booktabs,graphicx}
+\usepackage[hidelinks]{hyperref}
+\begin{document}
+\begin{center}
+{\Large\bfseries Supplementary Analysis for PALACE\par}
+\smallskip
+Auditing Hidden Reasoning Charges in Commercial LLM APIs through Token-Usage Prediction
+\end{center}
+\appendix
+\section{Prediction metrics}
+\label{app:metrics}
+Let \(y_i>0\) be the reference number of hidden reasoning tokens for request \(i\) and let \(\hat y_i\) be the greedy point prediction. For \(n\) requests with valid predictions, the relative metrics used in this supplement are
+\[
+\begin{aligned}
+\mathrm{AVG} &= \frac{100}{n}\sum_{i=1}^n \frac{|\hat y_i-y_i|}{y_i},\\
+\mathrm{AGG} &= 100\frac{\big|\sum_{i=1}^n(\hat y_i-y_i)\big|}{\sum_{i=1}^n y_i}.
+\end{aligned}
+\]
+Both are percentages. AVG weights requests equally. AGG measures the magnitude of net error as a percentage of total reference usage, so underestimates and overestimates can cancel. The signed counterpart of AGG can be reported to show the direction of the net error. These definitions specify the supplement's protocol. The exact implementation used for the original table should be checked against the full evaluation logs before applying the definitions to its AVG and AGG entries.
+
+At tolerance \(\epsilon\), greedy Pass@1 is the percentage of requests whose predictions satisfy \(|\hat y_i-y_i|/y_i<\epsilon\). Pass@5 credits a request if at least one of five sampled predictions meets the criterion. Both metrics require access to the reference count at evaluation time. The threshold-sweep figure in the original manuscript plots Pass@1 across prediction tolerances.
+
+\section{Simulated overreporting and audit decisions}
+\label{app:protocol}
+Keep each prompt, final answer, reference count and prediction fixed. Set the clean report to \(r_i(0)=y_i\) and the inflated report to \(r_i(\alpha)=\lceil(1+\alpha)y_i\rceil\) for inflation rate \(\alpha>0\). These paired scenarios isolate reported-count inflation from changes to generation. Use the one-sided decision rule
+\[
+   \mathrm{flag}_i(r;\tau)=\mathbf{1}\{r>(1+\tau)\hat y_i\}
+\]
+for a valid nonnegative prediction and threshold \(\tau\ge0\). Record missing or invalid predictions as abstentions and report coverage. For the request-level metrics below, count an abstention as an unflagged request and use all requests with positive reference counts as the denominator. This retains failures to flag an inflated request in the false-negative rate.
+
+At each positive inflation rate, the true-positive rate (TPR) is the fraction of inflated reports flagged. The false-negative rate is \(1-\mathrm{TPR}\). The false-positive rate (FPR) is the fraction of clean reports flagged at the same threshold. One evaluation grid is \(\alpha\in\{0,0.1,0.2,0.33,0.5,1.0\}\). A deployment threshold should be chosen on held-out clean calibration traffic for a specified false-positive budget, then frozen before scoring the test traffic. For workload-level auditing, use the same score with \(\sum_i r_i\) and \(\sum_i\hat y_i\) over a fixed window and calibrate a separate threshold on clean windows of comparable size and workload composition.
+
+\section{Bounds implied by the reported prediction results}
+\label{app:bounds}
+Suppose a prediction passes the \(\epsilon\)-tolerance test, so \((1-\epsilon)y_i\le\hat y_i\le(1+\epsilon)y_i\). Every such clean request remains unflagged if \((1+\tau)(1-\epsilon)\ge1\). Every such inflated report is flagged if \(1+\alpha>(1+\tau)(1+\epsilon)\). With the manuscript's \(\epsilon=0.33\), a fixed \(\tau=0.50\) satisfies both inequalities at \(\alpha=1.00\) because \(1.50(0.67)=1.005\) and \(1.50(1.33)=1.995<2.00\). Under this rule, the reported Pass@1 gives a lower bound on TPR and its complement gives an upper bound on FPR at this operating point, provided that Pass@1 uses the same set of requests and counts invalid predictions as failures. The inequalities remain valid if the published pass test includes equality.
+
+\begin{table}[ht]
+\centering
+\caption{Bounds derived from the manuscript's reported Pass@1 for the Qwen2.5-1.5B auditor. TPR refers to a simulated doubling of the reference count and FPR to the paired clean reports. The values inherit the rounding of the published percentages.}
+\begin{tabular}{lrrrr}
+\toprule
+ & \multicolumn{2}{c}{PALACE} & \multicolumn{2}{c}{LoRA}\\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}
+Domain & TPR floor (\%) & FPR ceiling (\%) & TPR floor (\%) & FPR ceiling (\%)\\
+\midrule
+General & 88.40 & 11.60 & 85.66 & 14.34\\
+Math    & 63.81 & 36.19 & 49.26 & 50.74\\
+Coding  & 58.39 & 41.61 & 35.81 & 64.19\\
+Medical & 59.71 & 40.29 & 51.93 & 48.07\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The bounds describe one large simulated reporting shift. The published Pass@1 values summarize absolute prediction error and do not reveal how many predictions overestimate or underestimate the reference at a given magnitude. Empirical TPR and FPR, including sensitivity to smaller changes, require the paired per-request reference counts and predictions. The bounds alone also leave open whether the realized detection rates of PALACE and LoRA differ at this operating point.
+
+\section{Reference data, counting, and uncertainty}
+\label{app:calibration}
+A reference record contains the prompt, the final answer, and a trusted count of the hidden reasoning tokens generated on that request. It should also identify the target model/version, relevant settings such as the reasoning budget and tool policy, and the counting convention. A provider could release these counts without disclosing the traces. Training the estimator requires labeled records. Calibrating its decision threshold requires a held-out set of clean records representative of the workload, including its domain mix and reasoning-length distribution. Calibration should be checked when model version, reasoning policy, or workload changes.
+
+The original benchmark sources include traces from DeepSeek-R1 and DeepSeek-R1-Distill-Llama-70B. The available general-domain preprocessing script extracts the first \texttt{<think>} block and counts its tokens with the \texttt{deepseek-ai/DeepSeek-V3-0324} tokenizer. It tokenizes the block text without the delimiters or an added chat template. The script documents this general-domain path. The preprocessing settings for the other domains and exact tokenizer revisions require confirmation from the evaluation configuration. A trace-derived count under a specified tokenizer defines the benchmark target. An API deployment requires a reference count aligned with the provider's definition of billable reasoning tokens.
+
+The existing math learning curve used 90,000 examples to train a Qwen2.5-3B auditor for one epoch. The manuscript reports that validation Pass@1 levels off after exposure to roughly 40,000--50,000 examples along that run. This observation is specific to the adapter, task and training schedule. An ablation to estimate data requirements would independently train adapters on nested subsets, hold the calibration and test sets fixed, and evaluate both prediction and detection metrics.
+
+With paired test predictions, 95\% confidence intervals for method differences can be obtained by resampling the same prompts jointly for both methods within each domain. Multiple traces associated with a single prompt should move together during resampling. Recompute the ratio of totals for AGG and the threshold-based fractions for TPR and FPR in each replicate. This estimates test-sample uncertainty conditional on the trained models. Variation attributable to training requires independent training runs.
+\end{document}

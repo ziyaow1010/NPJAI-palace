@@ -1,0 +1,45 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[hidelinks]{hyperref}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt}
+\begin{document}
+\begin{center}
+{\Large\bfseries Response to the Editor and Reviewer\par}
+\smallskip
+\emph{Auditing Hidden Reasoning Charges in Commercial LLM APIs through Token-Usage Prediction}
+\end{center}
+
+Dear Editor and Reviewer,
+
+Thank you for the careful assessment of our manuscript and for the opportunity to revise it. The comments identified a distinction that our presentation should make clearer. Estimating reference reasoning-token counts and detecting inflated reports are different tasks with different evaluation criteria. The accompanying supplement defines both tasks and quantifies what the available prediction results imply for a specified simulated inflation scenario.
+
+\section*{Response to the Editor}
+
+\paragraph{1. Scope and strength of the conclusions.}
+We agree that the claims should reflect the scope of the evidence. The threshold sweep measures how often a prediction falls within a given relative error tolerance of a reference token count. We propose to describe this figure as prediction accuracy across tolerances and to revise the Abstract, Results, Discussion, and figure caption accordingly. In particular, we will remove the suggestion that a 33\% prediction tolerance ensures detection above 33\% inflation. We will describe PALACE as a way to flag reported usage for further investigation under a specified model configuration and reference workload. We will also qualify the baseline comparisons. In the current table, LoRA often has higher Pass@5 and some baselines have lower aggregate error on particular domains.
+
+\paragraph{2. Detection rate for simulated inflation.}
+Supplementary Sections~B and C specify a one-sided reporting rule, define its true-positive and false-positive rates, and show how the existing prediction results constrain those rates. For example, when a reported count is twice the reference count and the rule flags counts more than 50\% above the greedy prediction, all predictions that pass the 33\% prediction-tolerance test are guaranteed to flag the inflated report and leave its clean counterpart unflagged. The resulting detection-rate lower bounds for the Qwen2.5-1.5B PALACE auditor are 88.40\%, 63.81\%, 58.39\%, and 59.71\% on General, Math, Coding, and Medical, respectively. The corresponding false-positive upper bounds are 11.60\%, 36.19\%, 41.61\%, and 40.29\%. This calculation assumes that both metrics use the same test requests and that invalid predictions count as failures in Pass@1. The bounds apply to a simulated doubling under this decision rule. A direct estimate of the realized detection and false-positive rates across inflation levels requires the paired per-request counts.
+
+\paragraph{3. Limitations.}
+We agree that the discussion should explain where predictive auditing can be applied. Natural variation in per-request reasoning length creates false alarms and missed detections, especially when the added token count is small relative to prediction error. A change in model version, reasoning budget, tool policy, or workload mix can shift the distribution of prediction residuals and require renewed calibration. A deployment also requires trusted labeled counts aligned with the provider's billing definition. Our benchmarks measure predictions against trace-derived reference counts. These results characterize predictive auditing on the benchmark workloads and under the stated simulation assumptions.
+
+\section*{Response to the Reviewer}
+
+Thank you for highlighting the practical relevance of hidden-token billing, the value of a limited-cooperation setting, and the importance of evaluating cumulative error. Your suggestions helped us make the protocol more precise.
+
+\paragraph{1. Evaluation metrics and auditing protocol.}
+We propose to define AVG as mean absolute relative request-level error and AGG as absolute error of the total predicted count divided by the total reference count, both expressed as percentages. Supplementary Section~A gives the formulas and distinguishes those errors and Pass@1/Pass@5 from detection metrics. The original table's normalization should be checked against the full evaluation implementation before updating its caption. Supplementary Sections~B and C state the clean and inflated reporting scenarios, the decision threshold, how abstentions are handled, and the conditions for false positives and false negatives. They also derive detection bounds for a specific scenario from the reported greedy Pass@1. At a fixed false-positive budget, realized sensitivity to smaller reporting shifts is a separate quantity.
+
+\paragraph{2. Auxiliary data.}
+A labeled reference example contains the request prompt, final answer, and trusted reasoning-token count. For deployment, the set should identify the target model and settings and reflect the anticipated domain mix and reasoning-length distribution. The auditor can train on these counts without receiving the underlying reasoning traces. A held-out clean subset serves a different purpose: setting an operating threshold. Calibration should be checked after changes to the model, reasoning budget, or workload. The existing 90,000-example Math training run shows validation Pass@1 leveling off after roughly 40,000--50,000 examples. This is an observation from one learning curve. The minimum training or calibration size for a given deployment remains an empirical question.
+
+\paragraph{3. Uncertainty and the counting protocol.}
+We agree that uncertainty estimates would strengthen the comparisons. Supplementary Section~D specifies a paired prompt-level bootstrap for confidence intervals on fixed-model comparisons, including how to group multiple traces from the same prompt. The existing table provides point estimates. Confidence intervals and between-seed variation require the per-request predictions and repeated training runs, respectively. The supplement also documents the available general-domain preprocessing path. It counts tokens in the first extracted reasoning block with the \texttt{deepseek-ai/DeepSeek-V3-0324} tokenizer, with the reasoning delimiters excluded. We will verify the corresponding tokenizer and counting configuration for each of the remaining benchmark sources before making a claim covering all domains.
+
+Thank you again for the time and constructive feedback.
+
+Sincerely,\\
+The authors
+\end{document}
