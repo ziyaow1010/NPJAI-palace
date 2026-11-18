@@ -412,8 +412,7 @@ To assess whether routing truly improves auditing performance, we compared {\n}â
     and the $x$-axis shows the training step.}
     \label{fig:grpo-math-qwen}
 \end{wrapfigure}
-To evaluate how {\n} and baselines respond to varying error tolerances, we conduct a sensitivity analysis that adjusts the error threshold used to compute auditing accuracy. Following CoIn~\citep{sun2025coin}, we gradually relax the relative error tolerance (e.g., 10\%, 30\%, 50\%, 100\%) and measure how often each method correctly flags suspicious samples under each threshold.
-We run this comparison on Qwen2.5â€‘1.5B across four datasets, comparing {\n} with CoIn and LoRA fine-tuning. As shown in Figure~\ref{fig:rateacc}, {\n} outperforms the baselines especially at low error thresholds where small deviations must still be caught. This demonstrates that {\n} is more sensitive to subtle token misreporting and better suited for real-world auditing, where providers might slightly misstate reasoning length to avoid detection.
+Figure~\ref{fig:rateacc} summarizes prediction accuracy across error tolerances for PALACE and LoRA and detection rates across injection rates for CoIn. In a separate simulation, PALACE detected 92.9\% of batches with 30\% overreporting at 50 requests per batch, with a 4.9\% false-positive rate.
 
 
 Figure~\ref{fig:grpo-math-qwen} shows the learning curve of the Qwen2.5-3B GRPO
