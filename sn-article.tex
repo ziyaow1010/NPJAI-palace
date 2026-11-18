@@ -412,13 +412,7 @@ To assess whether routing truly improves auditing performance, we compared {\n}â
 Figure~\ref{fig:rateacc} summarizes prediction accuracy across error tolerances for PALACE and LoRA and detection rates across injection rates for CoIn. In a separate simulation, PALACE detected 92.9\% of batches with 30\% overreporting at 50 requests per batch, with a 4.9\% false-positive rate.
 
 
-Figure~\ref{fig:grpo-math-qwen} shows the learning curve of the Qwen2.5-3B GRPO
-adapter on the Math dataset. The full Math training set contains 90K samples,
-but the curve plateaus roughly around the middle of training: after about
-40K--50K examples, the validation Pass@1 stabilizes near its final value with
-only small fluctuations. This indicates that the GRPO adapter is
-sample-efficient and does not require using the entire dataset to reach strong
-performance.
+Figure~\ref{fig:grpo-math-qwen} shows the training reward for the Qwen2.5-3B GRPO auditor over one epoch on 90,000 Math examples. The reward rises early in training and fluctuates around a plateau in the second half of the run.
 
 \section{Discussion}
 
