@@ -655,7 +655,7 @@ We compare our method against three baselines, including the prior work CoIn~\ci
 \end{itemize}
 For each dataset, we evaluate auditing performance using the following four metrics:
 \begin{itemize}
-\item \textbf{Accuracy}: A prediction is considered correct if its relative error is below 33\% compared to the ground truth. Here we set the 33\% threshold because, on the hardest \textit{math} and \textit{coding} datasets, the same LLM exhibits $\approx 33\%$ intra-model variance in hidden reasoning length for identical prompts~\citep{sun2025invisible}. Accordingly, if the inflation exceeds $33\%$, our auditing method should reliably flag it as a detectable anomaly. As shown in Figure~\ref{fig:rateacc}, we further evaluate {\n} under thresholds ranging from 10\% to 100\%, where it consistently outperforms baselines.
+\item \textbf{Accuracy}: We consider a prediction correct if its absolute relative error against the reference count is below 33\%. We use this tolerance because prior work reported approximately 33\% variation in reasoning length for repeated runs of the same model on identical prompts in difficult math and coding tasks~\citep{sun2025invisible}. Figure~\ref{fig:rateacc} also shows prediction accuracy at tolerances from 10\% to 100\%. For the detection experiments, we calibrate separate decision thresholds on clean requests.
 
 \begin{itemize}
 \item \textbf{Pass@1}: Computed via greedy decoding, selecting the most likely prediction.
