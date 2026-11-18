@@ -453,14 +453,7 @@ auditing enables lightweight continuous monitoring, while cryptographic
 mechanisms can provide stronger guarantees when deeper provider integration is
 available.
 
-Several limitations remain. {\n} relies on auxiliary data that are representative
-of the audited model configuration, and changes to the model, decoding strategy,
-reasoning budget, or tool-use policy may require recalibration. The current
-router also assumes a predefined set of domains and may be less effective on
-mixed-domain or previously unseen requests. Future work can extend the framework
-through continual calibration, open-set routing, uncertainty estimation, and
-joint auditing of other hidden computational components such as tool calls and
-retrieval operations.
+Predictive auditing requires trusted reference counts from the audited model and configuration, and changes in model settings or workload mix may require recalibration. When coding requests made up 70\% of the workload, a per-domain calibration correction reduced the false-positive rate for 100-request batches from 25.9\% to 3.5\%. Our evaluation uses open-model traces and simulated overreporting.
 
 Overall, {\n} establishes reasoning-length prediction as an effective foundation
 for auditing hidden token usage in opaque LLM services. By combining semantic
