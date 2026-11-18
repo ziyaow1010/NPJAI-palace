@@ -295,7 +295,7 @@ Our main contributions are summarized as follows:
 
 \subsection{Predicting hidden reasoning-token usage.} Table~\ref{tab:acc_err} demonstrates that {\n} achieves the strongest
 overall Pass@1 prediction performance across most domains and model sizes. By leveraging semantic information rather than relying solely on text length and utilizing the reasoning abilities of the auditing model, {\n} consistently delivers high Pass@1 accuracy, even on reasoning-heavy tasks like mathematics. For instance, {\n} predicts the reasoning length with 63.81\% accuracy under the 33\% relative error, while baselines cannot exceed even 50\% accuracy in the same setting.
-LoRA fine-tuning works well particularly on larger backbones such as Qwen2.5-3B. However, its performance becomes unstable on smaller models (\eg Qwen2.5-1.5B), showing signs of overfitting and limited generalization. Notably, LoRA fine-tuning has higher Pass@5 accuracy in most cases, which is due to the high uncertainty and variance of its prediction. This variance is problematic for real-world auditing, where consistent and precise predictions are essential.
+LoRA fine-tuning achieves higher Pass@5 in most Table~\ref{tab:acc_err} comparisons. Pass@5 measures whether at least one of five samples falls within the prediction tolerance, and the detection experiments use a single greedy prediction.
 
 For CoIn, Table~\ref{tab:acc_err} reports the fraction of injected samples correctly flagged at a fixed token-injection rate.
 
@@ -319,7 +319,7 @@ Simple baselines can achieve low aggregate error by predicting close to the data
 \setlength{\tabcolsep}{4pt}
 \renewcommand{\arraystretch}{1.08}
 
-\captionof{table}{\textbf{Regression vs.\ classification.}}
+\captionof{table}{\textbf{Regression vs.\ classification.} Classification accuracy is the percentage of predictions that match the reference token-count bucket. Regression accuracy is Pass@1 at a 33\% relative error tolerance.}
 \label{tab:tree}
 
 \begin{tabular}{@{}llcc@{}}
@@ -430,8 +430,9 @@ errors. These results indicate that reasoning-token consumption exhibits
 learnable patterns rather than depending only on surface-level features such as
 prompt and response length.
 
-The improvements over MLP and direct LoRA fine-tuning highlight the importance
-of semantic modeling and task-specific adaptation. Length-based predictors are
+The comparison with length-based baselines highlights the value of modeling the
+prompt and answer text. The matched SFT comparison shows that supervised training
+can also produce an accurate auditor. Length-based predictors are
 limited to shallow correlations, whereas {\n} reasons over the full
 prompt--answer pair before estimating hidden-token usage. The domain-specific
 GRPO modules further capture differences among mathematical derivations,
@@ -557,10 +558,11 @@ A dataset exhibiting a high proportion of such samples or a large cumulative err
 To establish the auditing capability, \n first fine-tunes a base LLM $\mathcal{W}$ on a general QA dataset $\mathcal{D}_G$ to obtain a general-purpose auditing model $\mathcal{W}_G$. This model is trained to estimate hidden reasoning token count required for solving a given problem, based on the problem statement and the final answer:
 % Equation placeholder:
 \begin{equation}
-\mathcal{W}_G = \arg\min_{\mathcal{W}} \; \mathbb{E}_{(x, y) \sim \mathcal{D}_G} \left[ \mathcal{L} \left( y, f_{\mathbf{W}}(x) \right) \right].
+\mathcal{W}_G = \arg\min_{\mathcal{W}} \; \mathbb{E}_{(x, y) \sim \mathcal{D}_G} \left[ \mathcal{L}_{\mathcal{W}}(x,y) \right].
 \end{equation}
+Here \(\mathcal{L}_{\mathcal{W}}(x,y)=-T^{-1}\sum_{t=1}^{T}\log p_{\mathcal{W}}(a_t\mid x,a_{<t})\) is the next-token cross-entropy averaged over the \(T\) tokens of the numeric target \(y\). The input \(x\) contains the problem and final answer in the auditor template, and only the target tokens \(a_1,\ldots,a_T\) contribute to the loss.
 
-Because reasoning complexity varies significantly across tasks and models, we further enhance $\mathcal{W}_G$ using GRPO on domain-specific datasets. For each target domain and COLS model (\eg coding domain on OpenAI's O3-mini), we perform GRPO on $\mathcal{D}_C$ to inject reasoning-specific adaptation into the model. The resulting GRPO-updated model is stored as a domain-specific delta.
+Because reasoning complexity varies significantly across tasks and models, we further enhance $\mathcal{W}_G$ using GRPO on domain-specific datasets. For each domain \(d\), we perform GRPO on its corresponding dataset \(\mathcal{D}_d\). For coding, this dataset is \(\mathcal{D}_C\). The resulting GRPO-updated model is stored as a domain-specific delta.
 We define a reward function that encourages accurate predictions within a relative error threshold $\delta$ and accounts for the underlying reasoning complexity. Let $y$ be the ground-truth hidden reasoning token count and $\hat{y}$ be the predicted reasoning length from auxiliary data. 
 The reward is defined as:
 
@@ -619,7 +621,7 @@ We select lightweight yet capable LLMs with strong reasoning ability in experime
 
 We use Verl~\citep{sheng2024hybridflow} as the training codebase. The relevant settings include: a generation temperature of 0.8, a total batch size of 128 (with 8 rollouts per strategy), an update batch size of 128 per GRPO step, KL penalty $\beta$ = 0.001, and a learning rate of 1e-6. 
 For the LoRA fine-tuning, we set the LoRA rank to 128, use a batch size of 128, and control the learning rate at 1e-5.
-Unless otherwise specified, we train for 3 epochs. 
+Unless otherwise specified, we train for three epochs. The Qwen2.5-3B Math learning curve in Figure~\ref{fig:grpo-math-qwen} uses one epoch on 90,000 examples.
 
 \subsection{Baselines and Evaluation Metrics}
 We compare our method against three baselines, including the prior work CoIn~\citep{sun2025coin} and two naive predictive auditing approaches:
