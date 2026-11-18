@@ -64,4 +64,18 @@ The original benchmark sources include traces from DeepSeek-R1 and DeepSeek-R1-D
 The existing math learning curve used 90,000 examples to train a Qwen2.5-3B auditor for one epoch. The manuscript reports that validation Pass@1 levels off after exposure to roughly 40,000--50,000 examples along that run. This observation is specific to the adapter, task and training schedule. An ablation to estimate data requirements would independently train adapters on nested subsets, hold the calibration and test sets fixed, and evaluate both prediction and detection metrics.
 
 With paired test predictions, 95\% confidence intervals for method differences can be obtained by resampling the same prompts jointly for both methods within each domain. Multiple traces associated with a single prompt should move together during resampling. Recompute the ratio of totals for AGG and the threshold-based fractions for TPR and FPR in each replicate. This estimates test-sample uncertainty conditional on the trained models. Variation attributable to training requires independent training runs.
+
+\section{Additional evaluation protocols}
+
+\paragraph{Direct detection and workload size.}
+Evaluate paired clean and inflated reports at 5\%, 10\%, 20\%, 33\%, and 50\%, keeping the requests and predictions fixed. Select the threshold on a clean calibration split for a prespecified false-positive budget, such as 5\%, and report both achieved test FPR and TPR. For workload-level detection, form windows of \(m\) requests that preserve the target workload composition and temporal dependence where applicable. Apply Section~B's sum rule and calibrate a separate threshold for each tested window size. Report the smallest tested \(m\) meeting a specified detection target, such as 80\% TPR at no more than 5\% FPR, at each inflation level. If none meets both targets, report that outcome. Use the same windows when comparing methods.
+
+\paragraph{Calibration sensitivity.}
+Keep the trusted test set fixed. To measure threshold drift, freeze the predictor and calibrate the alert threshold on clean samples with altered domain or reasoning-length proportions. To measure sensitivity to label bias, perturb only the auxiliary training labels, retrain under the same recipe, and calibrate on a separate trusted holdout. Report signed aggregate bias as well as test TPR and FPR.
+
+\paragraph{Request-level upper bounds.}
+For a fixed predictor and valid predictions, define the clean calibration score \(s_i=(y_i-\hat y_i)/\max(1,\hat y_i)\). At target miscoverage \(\gamma\), choose \(q\) as the \(\lceil(n+1)(1-\gamma)\rceil\)-th smallest score of \(n\) calibration requests, or \(+\infty\) when this rank exceeds \(n\). Flag reports above \(\hat y_i+q\max(1,\hat y_i)\). Under exchangeability of clean requests with valid predictions, the marginal clean flag probability among such requests is at most \(\gamma\). Report prediction coverage separately and evaluate detection power on inflated reports.
+
+\paragraph{Controlled prediction baselines.}
+Train a supervised numeric predictor sharing the GRPO predictor's backbone, adapter capacity, training examples, input format, and length cues. Score both on one greedy prediction per request. Include a text encoder with a supervised count-regression head. For the length-cue ablation, preserve the text and remove only the numeric prompt and answer length fields during both training and inference. Evaluate all configurations on the same test requests. These protocols describe proposed experiments.
 \end{document}
