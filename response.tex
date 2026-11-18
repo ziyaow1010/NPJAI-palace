@@ -12,31 +12,34 @@
 
 Dear Editor and Reviewers,
 
-Thank you for the careful assessment of our manuscript and for the opportunity to revise it. The comments identified a distinction that our presentation should make clearer. Estimating reference reasoning-token counts and detecting inflated reports are different tasks with different evaluation criteria. The accompanying supplement defines both tasks and quantifies what the available prediction results imply for a specified simulated inflation scenario.
+Thank you for the opportunity to revise our manuscript. PALACE estimates hidden reasoning-token usage from prompts and final answers and uses these estimates to monitor reported usage across workloads. The accompanying supplement reports direct detection experiments, a matched supervised baseline, and tests of calibration, feature use, and routing. At 30\% simulated overreporting, the domain-specific PALACE auditor detected 92.9\% of 50-request batches at an observed false-positive rate of 4.9\%.
 
 \section*{Response to the Editor}
 
 \paragraph{1. Scope and strength of the conclusions.}
-We agree that the claims should reflect the scope of the evidence. The threshold sweep measures how often a prediction falls within a given relative error tolerance of a reference token count. We propose to describe this figure as prediction accuracy across tolerances and to revise the Abstract, Results, Discussion, and figure caption accordingly. In particular, we will remove the suggestion that a 33\% prediction tolerance ensures detection above 33\% inflation. We will describe PALACE as a way to flag reported usage for further investigation under a specified model configuration and reference workload. We will also qualify the baseline comparisons. In the current table, LoRA often has higher Pass@5 and some baselines have lower aggregate error on particular domains.
+PALACE turns user-observable prompts and final answers into independent usage estimates that can be aggregated to monitor reported reasoning-token charges. The revision experiments quantify this capability on held-out workloads. We distinguish count prediction (the tolerance sweep in Figure~3) from detection of inflated reports (Supplementary Section~E). Workload-level detection is the primary auditing result.
 
 \paragraph{2. Detection rate for simulated inflation.}
-We evaluated simulated overreporting directly on held-out data. For the PALACE domain-specific 1.5B auditor, 30\% overreporting was detected in 92.9\% of 50-request batches at 4.9\% observed false-positive rate (FPR), and in 99.7\% of 100-request batches at 5.2\% FPR. The batches mixed the four domains uniformly. At 10\% overreporting, the first tested size exceeding 90\% detection was 500 requests (96.5\% detection, 8.4\% FPR). We will report the achieved FPR alongside detection rates and frame the main claim around workload-level monitoring. Supplementary Section~E gives the protocol and results.
+We evaluated simulated overreporting directly on held-out data. For the PALACE domain-specific 1.5B auditor, 30\% overreporting was detected in 92.9\% of 50-request batches at 4.9\% observed false-positive rate (FPR), and in 99.7\% of 100-request batches at 5.2\% FPR. The batches mixed the four domains uniformly. At 10\% overreporting, the first tested size exceeding 90\% detection was 500 requests (96.5\% detection, 8.4\% FPR). Supplementary Section~E reports the full workload-size sweep with the observed FPR at each operating point.
 
 \paragraph{3. Limitations.}
-We agree that the discussion should explain where predictive auditing can be applied. Natural variation in per-request reasoning length creates false alarms and missed detections, especially when the added token count is small relative to prediction error. A change in model version, reasoning budget, tool policy, or workload mix can shift the distribution of prediction residuals and require renewed calibration. A deployment also requires trusted labeled counts aligned with the provider's billing definition. Our benchmarks measure predictions against trace-derived reference counts. These results characterize predictive auditing on the benchmark workloads and under the stated simulation assumptions.
+The detector uses reference counts matched to the audited model and configuration and sets its threshold on clean calibration traffic. Supplementary Section~E quantifies how reasoning-length and domain mix shifts affect the false-positive rate. In a workload with 70\% coding requests, domain-wise calibration reduced the 100-request false-positive rate from 25.9\% to 3.5\%. The evaluation uses trace-derived references and simulated reporting changes.
 
 \section*{Response to Reviewer 1}
 
 Thank you for highlighting the practical relevance of hidden-token billing, the value of a limited-cooperation setting, and the importance of evaluating cumulative error. Your suggestions helped us make the protocol more precise.
 
 \paragraph{1. Evaluation metrics and auditing protocol.}
-We propose to define AVG as mean absolute relative request-level error and AGG as absolute error of the total predicted count divided by the total reference count, both expressed as percentages. Supplementary Section~A gives the formulas. The original Methods describe AVG as the mean deviation of greedy estimates and AGG as the discrepancy between summed predictions and references. We will add the equations and units to distinguish the two metrics. Supplementary Section~E describes the reported-count simulation, held-out threshold calibration, and measured false-positive and true-positive rates. The prediction tolerance of 33\% is used only for scoring count estimates against references.
+\begin{quote}\small\itshape Please provide explicit formulas, units, and normalization for AVG and AGG error, and clearly distinguish token-count prediction accuracy from inflation-detection accuracy. For the simulated inflation experiments, a concise description of the inflation rates, decision thresholds, and false-positive/false-negative criteria would make the results easier to interpret.\end{quote}
+\textbf{Response.} Supplementary Section~A defines AVG as mean absolute relative request-level error and AGG as absolute error of the total predicted count divided by the total reference count, both expressed as percentages. Supplementary Section~E describes the reported-count simulation, held-out threshold calibration, and measured false-positive and true-positive rates. The prediction tolerance of 33\% is used only for scoring count estimates against references.
 
 \paragraph{2. Auxiliary data.}
-A reference example contains the request prompt, final answer, and a trusted reasoning-token count for the audited model and configuration. For threshold calibration, we tested 50--500 clean records and observed mean FPRs of 3--6\%, with greater variability at small calibration sizes. For estimator training, a nested data-size study on matched SFT showed improvements through the full training set in all domains. These experiments address separate data requirements. We did not run the GRPO data-size sweep. Supplementary Section~E reports both studies.
+\begin{quote}\small\itshape Since deployment depends on a provider-released calibration set, please clarify its required size and contents, whether it must be specific to each model and configuration, and how representative it needs to be. A small ablation over calibration-set size would further strengthen the practical claim, if readily available.\end{quote}
+\textbf{Response.} A reference example contains the request prompt, final answer, and a trusted reasoning-token count for the audited model and configuration. For threshold calibration, we tested 50--500 clean records and observed mean FPRs of 3--6\%, with greater variability at small calibration sizes. For estimator training, a nested data-size study on matched SFT showed improvements through the full training set in all domains. Calibration examples should reflect the deployment workload, including its domain mix and distribution of reasoning lengths. Supplementary Sections~D and E describe the reference data and report both size studies.
 
 \paragraph{3. Uncertainty and the counting protocol.}
-We report question-cluster bootstrap 95\% confidence intervals using 2,000 resamples, and three independently trained SFT seeds. SFT reached an overall Pass@33 of \(72.2\pm0.7\%\) (mean and sample standard deviation across seeds). Each released PALACE configuration provides one checkpoint, so its confidence interval describes test-sample uncertainty. The available general-domain preprocessing counts tokens in the first reasoning block using the \texttt{deepseek-ai/DeepSeek-V3-0324} tokenizer and excludes the reasoning delimiters. The exact preprocessing configuration for the other domains still needs confirmation.
+\begin{quote}\small\itshape Reporting standard deviations, confidence intervals, or multiple-seed results for the central comparisons would help establish the robustness of PALACE’s gains. It would also be useful to state the tokenizer/counting protocol, since reasoning-token count is the principal prediction target.\end{quote}
+\textbf{Response.} We report question-cluster bootstrap 95\% confidence intervals using 2,000 resamples, and three independently trained SFT seeds. SFT reached an overall Pass@33 of \(72.2\pm0.7\%\) (mean and sample standard deviation across seeds). Each released PALACE configuration provides one checkpoint, so its confidence interval describes test-sample uncertainty. The available general-domain preprocessing counts tokens in the first reasoning block using the \nolinkurl{deepseek-ai/DeepSeek-V3-0324} tokenizer and excludes the reasoning delimiters.
 
 
 \section*{Response to Reviewer 2}
@@ -68,7 +71,7 @@ CoIn is a cryptographic verification protocol based on hash trees and interactiv
 \begin{quote}\small\itshape
 The remaining baselines are either weak (the MLP uses only input/output lengths) or not a clean ablation (LoRA is trained on a different data format than PALACE's GRPO modules.). Please consider a stonger baseline.
 \end{quote}
-\textbf{Response.} We evaluated full-parameter SFT on Qwen2.5-1.5B-Instruct with matched training data and input--output format. We also tested a LightGBM baseline using length and surface features. Across the four domains, PALACE obtained 68.6\% Pass@33, compared with 54.8\% for the domain-specific LightGBM and 49.1\% for the two-length MLP. Matched SFT obtained \(72.2\pm0.7\%\) across three seeds. PALACE minus matched SFT was \(-3.9\) percentage points (95\% CI \([-5.9,-2.0]\)) for seed 0 and \(-4.1\) points (\([-6.0,-2.2]\)) for seed 1. We will revise the interpretation to reflect the stronger SFT results. The matched baseline uses full-parameter SFT. Supplementary Section~E reports the configurations and scores.
+\textbf{Response.} We evaluated full-parameter SFT on Qwen2.5-1.5B-Instruct with matched training data and input--output format. We also tested a LightGBM baseline using length and surface features. Across the four domains, PALACE obtained 68.6\% Pass@33, compared with 54.8\% for the domain-specific LightGBM and 49.1\% for the two-length MLP. Matched SFT obtained \(72.2\pm0.7\%\) across three seeds. PALACE minus matched SFT was \(-3.9\) percentage points (95\% CI \([-5.9,-2.0]\)) for seed 0 and \(-4.1\) points (\([-6.0,-2.2]\)) for seed 1. These comparisons show that the user-side estimator benefits from access to prompt and answer content and that matched SFT is a strong training recipe for PALACE. Supplementary Section~E reports the configurations and scores.
 
 \section*{Response to Reviewer 3}
 Thank you for the detailed suggestions on calibration, direct detection, and reproducibility.
@@ -89,7 +92,7 @@ Section 2.3 is titled around identifying reporting discrepancies, but Figure 3 m
 \begin{quote}\small\itshape
 Pass@1 accuracy is strong on general reasoning and more moderate (about 60\%) on math, coding and medical tasks. It may help to position PALACE primarily as an aggregate monitoring tool. Calibrated prediction intervals (e.g., conformal methods) could make request-level flags more interpretable.
 \end{quote}
-\textbf{Response.} We will frame aggregate monitoring as the primary use. At 30\% overreporting, calibrated request-level detection ranged from 11.3\% to 36.8\% across domains. Nominal 90\% same-domain conformal intervals covered 89.4--91.4\% of references for PALACE. Their upper-to-lower bound ratios ranged from 2.0 to 4.6, and Code and Medical coverage fell to 83--85\% under calibration shift. We will present the intervals as a measure of individual-request uncertainty. Supplementary Section~E gives the results.
+\textbf{Response.} The observed detection rates support using PALACE primarily for aggregate monitoring. At 30\% overreporting, calibrated request-level detection ranged from 11.3\% to 36.8\% across domains. Nominal 90\% same-domain conformal intervals covered 89.4--91.4\% of references for PALACE. Their upper-to-lower bound ratios ranged from 2.0 to 4.6, and Code and Medical coverage fell to 83--85\% under calibration shift. Supplementary Section~E reports both coverage and interval width to characterize individual-request uncertainty.
 
 \paragraph{4. Aggregated error.}
 \begin{quote}\small\itshape
@@ -115,21 +118,19 @@ A sentence explaining how CoIn's Pass@1 was computed would help readers, as CoIn
 
 \paragraph{7(b). Training epochs.}
 \begin{quote}\small\itshape Reconcile \emph{3 epochs} with the one-epoch curve in Figure 4.\end{quote}
-\textbf{Response.} The original Methods specify three epochs by default. GRPO uses veRL with rollout temperature 0.8, batch size 128, eight rollouts, update batch size 128, KL coefficient 0.001, and learning rate \(10^{-6}\). The original LoRA baseline uses rank 128, batch size 128, and learning rate \(10^{-5}\). Figure~4 shows a separate Qwen2.5-3B Math learning-curve run on 90,000 examples for one epoch. We will state this exception explicitly in the Methods.
+\textbf{Response.} The original Methods specify three epochs by default. GRPO uses veRL with rollout temperature 0.8, batch size 128, eight rollouts, update batch size 128, KL coefficient 0.001, and learning rate \(10^{-6}\). The original LoRA baseline uses rank 128, batch size 128, and learning rate \(10^{-5}\). Figure~4 shows a separate Qwen2.5-3B Math learning-curve run on 90,000 examples for one epoch.
 
 \paragraph{7(c). Loss in Equation (1).}
 \begin{quote}\small\itshape Define the loss \(L\) in Eq.\ (1).\end{quote}
-\textbf{Response.} The released supervised fine-tuning example masks prompt positions and applies next-token prediction loss to the numeric response. We will verify the general-stage configuration before using it to define the loss in Equation~(1), including the target positions and the loss reduction.
+\textbf{Response.} In the released supervised implementation, the objective is next-token cross-entropy on the tokenized numeric answer. Prompt positions are masked. With answer tokens \(a_1,\ldots,a_T\), the per-example loss is \(\mathcal L=-T^{-1}\sum_{t=1}^{T}\log p_\theta(a_t\mid x,a_{<t})\), where \(x\) is the input prompt--answer pair in the auditor template.
 
 \paragraph{7(d). GRPO domain dataset.}
 \begin{quote}\small\itshape Correct the GRPO description, which refers to \(D_C\) for all domains.\end{quote}
-\textbf{Response.} We will use \(\mathcal D_d\) for the selected domain \(d\). The coding dataset is the case \(\mathcal D_C\).
+\textbf{Response.} Each GRPO adapter is trained on \(\mathcal D_d\), the dataset for its selected domain \(d\). The coding adapter uses \(\mathcal D_C\).
 
 \paragraph{7(e). Short reasoning traces.}
 \begin{quote}\small\itshape Consider how the relative-error reward in Eq.\ (2) behaves for very short reasoning traces.\end{quote}
-\textbf{Response.} For positive \(y\), a one-token error reduces reward by \(1/y\) before clipping. It receives zero reward at \(y=1\), and the equation is undefined at \(y=0\). We will describe the stronger penalty on short traces and verify how zero counts were handled. The shortest reference in our test set was 238 tokens, leaving behavior on zero or very short traces unevaluated.
-
-Thank you again for the time and constructive feedback.
+\textbf{Response.} For positive \(y\), a one-token error reduces reward by \(1/y\) before clipping. It receives zero reward at \(y=1\), and the equation is undefined at \(y=0\). The shortest reference in our test set was 238 tokens, leaving behavior on zero or very short traces unevaluated.
 
 Sincerely,\\
 The authors
