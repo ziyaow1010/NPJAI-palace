@@ -661,8 +661,8 @@ For each dataset, we evaluate auditing performance using the following four metr
 \item \textbf{Pass@1}: Computed via greedy decoding, selecting the most likely prediction.
 \item \textbf{Pass@5}: Computed via sampling five predictions with a temperature of 0.8, counting the result as correct if any prediction meets the accuracy criterion.
 \end{itemize}
-\item \textbf{Average Error}: The mean numeric deviation between predicted and ground-truth reasoning lengths in greedy decoding.
-\item \textbf{Aggregated Error}: The difference between the total predicted reasoning length and the total ground-truth reasoning length, reflecting dataset-level cumulative bias.
+\item \textbf{Average Error (AVG).} For \(n\) requests, let \(y_i\) be the reference count and \(\hat y_i\) be the greedy prediction. AVG is the mean absolute relative error across requests, expressed as a percentage, \(\frac{100}{n}\sum_i |\hat y_i-y_i|/y_i\).
+\item \textbf{Aggregated Error (AGG).} AGG is the absolute difference between the total predicted and reference counts, divided by the total reference count and expressed as a percentage, \(100|\sum_i(\hat y_i-y_i)|/\sum_i y_i\). Overestimates and underestimates can cancel when counts are summed.
 \end{itemize}
 These metrics jointly capture both the \textit{precision} of individual predictions and the \textit{overall bias} of the auditing model across the entire dataset. In particular, the aggregated error reflects whether small per-sample deviations accumulate into large discrepancies, which is critical for reliable large-scale auditing of hidden token usage in real-world LLM deployments.
 
