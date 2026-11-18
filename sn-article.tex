@@ -299,12 +299,7 @@ LoRA fine-tuning works well particularly on larger backbones such as Qwen2.5-3B.
 
 For other baselines, CoIn struggles to produce reliable predictions under the 33\% error boundary, failing to capture nuanced reasoning token patterns. MLP performs slightly better but is fundamentally constrained by the lack of semantic information: its predictions are shallow correlations between input–output lengths, leading to low accuracy across most domains.
 
-% \paragraph{Prediction Error.}
-The error metrics in Table \ref{tab:acc_err} further highlight {\n}'s advantage. It is the only method that consistently maintains both low average and aggregated error, ensuring accurate predictions on individual samples while avoiding cumulative drift at scale. This makes {\n} uniquely suited for large-scale auditing, where aggregate consistency is critical.
-LoRA fine-tuning shows mixed results. Its predictions on larger models (\eg Qwen2.5-3B) appear more stable, but the improvement is limited and inconsistent across domains. On smaller models like Qwen2.5-1.5B, LoRA clearly overfits, leading to erratic error patterns and unreliable auditing performance.
-
-The baselines are less reliable than {\n}. CoIn not only produces inaccurate predictions but also misses subtle inflation, generating high error. MLP sometimes achieves low aggregated error, which indicates it memorizes dataset-level distributions, but its high average error and low accuracy make it unsuitable for precise auditing.
-
+Simple baselines can achieve low aggregate error by predicting close to the dataset mean for many requests. Their predictions add up to a reasonable total, but miss how much reasoning-token usage varies from one request to another. PALACE reduces average error on individual requests while keeping aggregate error low, so its estimates are useful both for individual requests and for the workload as a whole.
 
 \begin{figure*}[tbp]
     \centering
