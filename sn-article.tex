@@ -165,6 +165,12 @@ Large language models (LLMs) increasingly rely on extended internal computation 
 
 To protect model security and intellectual property, commercial providers such as OpenAI~\citep{openai2025reasoning}, Google~\citep{google2025thinking}, and Anthropic typically do not reveal the complete internal traces produced during reasoning or tool execution. Users may nevertheless be charged for the associated internal tokens in addition to the visible response. Services with this property have been described as \textit{Commercial Opaque LLM Services} (COLS)~\citep{sun2025invisible}. Figure~\ref{fig:problem} illustrates the transparency concern of COLS, where users can observe the final answer but cannot directly verify the hidden reasoning-token usage.
 
+\begin{figure}[!htbp]
+    \centering
+    \includegraphics[width=0.70\linewidth]{Figures/intro.pdf}
+    \par\smallskip\textbf{Figure~\ref{fig:problem}}\par
+\end{figure}
+
 This opaque design raises notable transparency gaps: \textbf{users are charged for token usage they cannot observe or verify}. All token consumption is reported solely by the service provider, whose financial incentives may conflict with those of the user. This creates the risk of \textit{token inflation}, where COLS may over-report token usage to increase billing. 
 Empirical studies show that in many state-of-the-art models, over 90\% of tokens are consumed in hidden reasoning, with only a small portion forming the final answer~\citep{sun2025coin}. Even minor inflation under such conditions can lead to considerable increases in expenses, particularly for large-scale API users engaged in synthetic data generation, annotation, or document processing. 
 For example, an ARC-AGI run with OpenAI's o3 model consumed 111 million tokens at a cost of \$66,772~\citep{chollet2025o3}, with over 60\% from hidden reasoning tokens. Although there is no evidence of inflation in COLS, the large monetary amounts involved mean that users have legitimate reasons to expect clearer auditing mechanisms, highlighting the need for greater transparency in LLM services. Existing work on auditing commercial LLM services has primarily considered either service-quality substitution or direct verification of reported execution. For quality downgrade, prior studies detect whether a provider silently substitutes a smaller model or a cheaper execution pipeline using output-based statistical tests, benchmark comparisons, log-probability analysis, or trusted execution environments~\citep{cai2025you,yuan2025trust,nvidia2023confidential}. For quantity inflation, CoIn~\citep{sun2025coin} constructs a hash-tree-based mechanism that allows an auditor to verify token counts and semantic consistency through
@@ -371,13 +377,31 @@ However, as shown in Table \ref{tab:tree}, the classification approach lags behi
 % \end{table}
 To assess whether routing truly improves auditing performance, we compared {\n}’s router-based design with a simpler \textit{merged dataset} baseline, where all domain data were combined and a single GRPO adapter was trained across tasks. As shown in Figure \ref{fig:general_compare}, the router consistently yields stronger results on Qwen2.5‑1.5B. It achieves higher Pass@1 accuracy on nearly every subtask, from General reasoning to Medical queries, and also provides small but meaningful gains on Pass@5. This improvement comes from the router’s ability to partition inputs by domain and activate the most relevant GRPO adapter, instead of forcing one generic adapter to absorb heterogeneous reasoning styles. By doing so, the router helps {\n} mitigate variance across tasks and reduces the cross‑domain interference observed in the merged‑training setup, resulting in more stable and accurate token‑length predictions overall.
 
+\begin{figure}[!htbp]
+    \centering
+    \includegraphics[width=1.0\linewidth]{Figures/merged.pdf}
+    \par\smallskip\textbf{Figure~\ref{fig:general_compare}}\par
+\end{figure}
+
 
 \subsection{Predictive auditing identifies simulated reporting discrepancies}
 
 Figure~\ref{fig:rateacc} summarizes prediction accuracy across error tolerances for PALACE and LoRA and detection rates across injection rates for CoIn. In a separate simulation, PALACE detected 92.9\% of batches with 30\% overreporting at 50 requests per batch, with a 4.9\% false-positive rate.
 
+\begin{figure}[!htbp]
+    \centering
+    \includegraphics[width=1.0\linewidth]{Figures/error.pdf}
+    \par\smallskip\textbf{Figure~\ref{fig:rateacc}}\par
+\end{figure}
+
 
 Figure~\ref{fig:grpo-math-qwen} shows the training reward for the Qwen2.5-3B GRPO auditor over one epoch on 90,000 Math examples. The reward rises early in training and fluctuates around a plateau in the second half of the run.
+
+\begin{figure}[!htbp]
+    \centering
+    \includegraphics[width=0.75\linewidth]{Figures/grpo_exp.pdf}
+    \par\smallskip\textbf{Figure~\ref{fig:grpo-math-qwen}}\par
+\end{figure}
 
 \section{Discussion}
 
@@ -424,6 +448,12 @@ path toward more transparent and auditable commercial LLM services.
 
 \section{Methods}
 
+\begin{figure}[!htbp]
+    \centering
+    \includegraphics[width=0.95\linewidth]{Figures/workflow.pdf}
+    \par\smallskip\textbf{Figure~\ref{fig:workflow}}\par
+\end{figure}
+
 \subsection{Dataset Construction}
 \label{sec:dataset}
 
@@ -444,6 +474,12 @@ We refer to these datasets as $\mathcal{D}_M$, $\mathcal{D}_C$, $\mathcal{D}_{\t
 
 The GRPO auditing dataset is constructed to train the auditing model under GRPO. Unlike a supervised regression dataset that uses ground-truth labels for direct loss computation, this dataset provides reference values that GRPO converts into reward signals for policy optimization.  
 Each sample consists of a structured prompt that includes a \texttt{<Problem>} section providing the user prompt, a \texttt{<Solution>} section showing the response from COLS, and explicit instructions directing the model to generate step-by-step reasoning inside \texttt{<think>} tags and output a predicted token count in JSON format within \texttt{<answer>} tags. To stabilize training and improve estimation accuracy, the prompt also provides auxiliary cues such as prompt and answer token lengths, which correlate with reasoning complexity. This structured setup provides the reference for reward computation, allowing GRPO to refine both the reasoning process and the accuracy of token count predictions across domains. The complete training prompt is provided in Figure~\ref{fig:input_rl}.
+
+\begin{figure}[!htbp]
+    \centering
+    \includegraphics[width=0.91\linewidth]{Figures/figure6.pdf}
+    \par\smallskip\textbf{Figure~\ref{fig:input_rl}}\par
+\end{figure}
 
 \subsection{Auditing models}
 

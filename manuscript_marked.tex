@@ -1,8 +1,8 @@
 % Review baseline: 0e88e15 (initial Overleaf import).
 %Version 3.1 December 2024
 %DIF LATEXDIFF DIFFERENCE FILE
-%DIF DEL baseline/original.tex   Thu Nov 19 11:58:27 2026
-%DIF ADD palace/sn-article.tex   Thu Nov 19 12:00:38 2026
+%DIF DEL baseline/original.tex       Thu Nov 19 11:58:27 2026
+%DIF ADD palace-fix/sn-article.tex   Thu Nov 19 12:37:39 2026
 % See section 11 of the User Manual for version history
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -103,11 +103,11 @@
 \raggedbottom
 %%\unnumbered% uncomment this for unnumbered level heads
 %DIF PREAMBLE EXTENSION ADDED BY LATEXDIFF
-%DIF CFONT PREAMBLE %DIF PREAMBLE
+%DIF UNDERLINE PREAMBLE %DIF PREAMBLE
+\RequirePackage[normalem]{ulem} %DIF PREAMBLE
 \RequirePackage{color}\definecolor{RED}{rgb}{1,0,0}\definecolor{BLUE}{rgb}{0,0,1} %DIF PREAMBLE
-\DeclareOldFontCommand{\sf}{\normalfont\sffamily}{\mathsf} %DIF PREAMBLE
-\providecommand{\DIFadd}[1]{{\protect\color{blue} \sf #1}} %DIF PREAMBLE
-\providecommand{\DIFdel}[1]{{\protect\color{red} \scriptsize #1}} %DIF PREAMBLE
+\DeclareRobustCommand{\DIFadd}[1]{{\protect\color{blue}\uline{#1}}} %DIF PREAMBLE
+\DeclareRobustCommand{\DIFdel}[1]{{\protect\color{red}\sout{#1}}} %DIF PREAMBLE
 %DIF SAFE PREAMBLE %DIF PREAMBLE
 \providecommand{\DIFaddbegin}{} %DIF PREAMBLE
 \providecommand{\DIFaddend}{} %DIF PREAMBLE
@@ -122,13 +122,18 @@
 \providecommand{\DIFaddendFL}{} %DIF PREAMBLE
 \providecommand{\DIFdelbeginFL}{} %DIF PREAMBLE
 \providecommand{\DIFdelendFL}{} %DIF PREAMBLE
+%DIF AMSMATHULEM PREAMBLE %DIF PREAMBLE
+\makeatletter %DIF PREAMBLE
+\let\sout@orig\sout %DIF PREAMBLE
+\renewcommand{\sout}[1]{\ifmmode\text{\sout@orig{\ensuremath{#1}}}\else\sout@orig{#1}\fi} %DIF PREAMBLE
+\makeatother %DIF PREAMBLE
 %DIF COLORLISTINGS PREAMBLE %DIF PREAMBLE
 \RequirePackage{listings} %DIF PREAMBLE
 \RequirePackage{color} %DIF PREAMBLE
 \lstdefinelanguage{DIFcode}{ %DIF PREAMBLE
-%DIF DIFCODE_CFONT %DIF PREAMBLE
-  moredelim=[il][\color{red}\scriptsize]{\%DIF\ <\ }, %DIF PREAMBLE
-  moredelim=[il][\color{blue}\sffamily]{\%DIF\ >\ } %DIF PREAMBLE
+%DIF DIFCODE_UNDERLINE %DIF PREAMBLE
+  moredelim=[il][\color{red}\sout]{\%DIF\ <\ }, %DIF PREAMBLE
+  moredelim=[il][\color{blue}\uwave]{\%DIF\ >\ } %DIF PREAMBLE
 } %DIF PREAMBLE
 \lstdefinestyle{DIFverbatimstyle}{ %DIF PREAMBLE
 	language=DIFcode, %DIF PREAMBLE
@@ -225,7 +230,13 @@ Large language models (LLMs) increasingly rely on extended internal computation 
 
 To protect model security and intellectual property, commercial providers such as OpenAI~\citep{openai2025reasoning}, Google~\citep{google2025thinking}, and Anthropic typically do not reveal the complete internal traces produced during reasoning or tool execution. Users may nevertheless be charged for the associated internal tokens in addition to the visible response. Services with this property have been described as \textit{Commercial Opaque LLM Services} (COLS)~\citep{sun2025invisible}. Figure~\ref{fig:problem} illustrates the transparency concern of COLS, where users can observe the final answer but cannot directly verify the hidden reasoning-token usage.
 
-This opaque design raises notable transparency gaps: \textbf{users are charged for token usage they cannot observe or verify}. All token consumption is reported solely by the service provider, whose financial incentives may conflict with those of the user. This creates the risk of \textit{token inflation}, where COLS may over-report token usage to increase billing.
+\DIFaddbegin \begin{figure}[!htbp]
+    \centering
+    \includegraphics[width=0.70\linewidth]{Figures/intro.pdf}
+    \par\smallskip\textbf{\DIFaddFL{Figure~\ref{fig:problem}}}\par
+\end{figure}
+
+\DIFaddend This opaque design raises notable transparency gaps: \textbf{users are charged for token usage they cannot observe or verify}. All token consumption is reported solely by the service provider, whose financial incentives may conflict with those of the user. This creates the risk of \textit{token inflation}, where COLS may over-report token usage to increase billing.
 Empirical studies show that in many state-of-the-art models, over 90\% of tokens are consumed in hidden reasoning, with only a small portion forming the final answer~\citep{sun2025coin}. Even minor inflation under such conditions can lead to considerable increases in expenses, particularly for large-scale API users engaged in synthetic data generation, annotation, or document processing.
 For example, an ARC-AGI run with OpenAI's o3 model consumed 111 million tokens at a cost of \$66,772~\citep{chollet2025o3}, with over 60\% from hidden reasoning tokens. Although there is no evidence of inflation in COLS, the large monetary amounts involved mean that users have legitimate reasons to expect clearer auditing mechanisms, highlighting the need for greater transparency in LLM services. Existing work on auditing commercial LLM services has primarily considered either service-quality substitution or direct verification of reported execution. For quality downgrade, prior studies detect whether a provider silently substitutes a smaller model or a cheaper execution pipeline using output-based statistical tests, benchmark comparisons, log-probability analysis, or trusted execution environments~\citep{cai2025you,yuan2025trust,nvidia2023confidential}. For quantity inflation, CoIn~\citep{sun2025coin} constructs a hash-tree-based mechanism that allows an auditor to verify token counts and semantic consistency through
 additional interaction with the service provider.
@@ -395,12 +406,12 @@ Our main contributions are summarized as follows:
 
 \section{Results}
 
-\subsection{Predicting hidden reasoning-token usage\DIFdelbegin \DIFdel{.}\DIFdelend }
+\subsection{Predicting hidden reasoning-token usage}
 \DIFaddbegin
 
 \DIFaddend Table~\ref{tab:acc_err} demonstrates that {\n} achieves the strongest
 overall Pass@1 prediction performance across most domains and model sizes. By leveraging semantic information rather than relying solely on text length and utilizing the reasoning abilities of the auditing model, {\n} consistently delivers high Pass@1 accuracy, even on reasoning-heavy tasks like mathematics. For instance, {\n} predicts the reasoning length with 63.81\% accuracy under the 33\% relative error, while baselines cannot exceed even 50\% accuracy in the same setting.
-LoRA fine-tuning \DIFdelbegin \DIFdel{works well particularly on larger backbones such as Qwen2.5-3B. However, its performance becomes unstable on smaller models (\eg Qwen2.5-1.5B), showing signs of overfitting and limited generalization. Notably, LoRA fine-tuning has }\DIFdelend \DIFaddbegin \DIFadd{achieves }\DIFaddend higher Pass@5 \DIFdelbegin \DIFdel{accuracy in most cases, which is due to the high uncertainty and variance of its prediction . This variance is problematic for real-world auditing, where consistent and precise predictions are essential}\DIFdelend \DIFaddbegin \DIFadd{in most Table~\ref{tab:acc_err} comparisons. Pass@5 measures whether at least one of five samples falls within the prediction tolerance, and the detection experiments use a single greedy prediction}\DIFaddend .
+LoRA fine-tuning \DIFdelbegin \DIFdel{works well particularly on larger backbones such as Qwen2.5-3B. However, its performance becomes unstable on smaller models (\eg Qwen2.5-1.5B), showing signs of overfitting and limited generalization. Notably, LoRA fine-tuning has }\DIFdelend \DIFaddbegin \DIFadd{achieves }\DIFaddend higher Pass@5 \DIFdelbegin \DIFdel{accuracy in most cases, which is due to the high uncertainty and variance of its prediction . This variance is problematic for real-world auditing, where consistent and precise predictions are essential}\space{}\DIFdelend \DIFaddbegin \DIFadd{in most Table~\ref{tab:acc_err} comparisons. Pass@5 measures whether at least one of five samples falls within the prediction tolerance, and the detection experiments use a single greedy prediction}\DIFaddend .
 
 For \DIFdelbegin \DIFdel{other baselines, CoInstruggles to produce reliable predictions under the 33\% error boundary, failing to capture nuanced reasoning token patterns. MLP performs slightly better but is fundamentally constrained by the lack of semantic information: its predictions are shallow correlations between input–output lengths, leading to low accuracy across most domains.
 }\DIFdelend \DIFaddbegin \DIFadd{CoIn, Table~\ref{tab:acc_err} reports the fraction of injected samples correctly flagged at a fixed token-injection rate.
@@ -410,15 +421,15 @@ For \DIFdelbegin \DIFdel{other baselines, CoInstruggles to produce reliable pred
 \DIFdelbegin \DIFdel{The error metrics in Table \ref{tab:acc_err} further highlight }%DIFDELCMD < {\n}%%%
 \DIFdel{'s advantage. It is the only method that consistently maintains both low average and aggregated error, ensuring accurate predictions on individual samples while avoiding cumulative drift at scale. This makes }%DIFDELCMD < {\n} %%%
 \DIFdel{uniquely suited for large-scale auditing, where aggregate consistency is critical.
-LoRA }\DIFdelend \DIFaddbegin \DIFadd{On the held-out split, PALACE achieved 68.6\% Pass@33 across four domains, compared with 54.8\% for per-domain LightGBM using length and surface features and 49.1\% for the two-length MLP. With the same backbone, training data, and input--output format, full-parameter SFT achieved \(72.2\% \pm 0.7\%\) across three seeds. These results show the value of using prompt and answer content and establish supervised }\DIFaddend fine-tuning \DIFdelbegin \DIFdel{shows mixed results . Its predictions on larger models (\eg Qwen2.5-3B) appear more stable, but the improvement is limited and inconsistent across domains. On smaller models like Qwen2.5-1.5B, LoRA clearly overfits, leading to erratic error patterns and unreliable auditing performance}\DIFdelend \DIFaddbegin \DIFadd{as another effective way to train the auditor}\DIFaddend .
+LoRA }\DIFdelend \DIFaddbegin \DIFadd{On the held-out split, PALACE achieved 68.6\% Pass@33 across four domains, compared with 54.8\% for per-domain LightGBM using length and surface features and 49.1\% for the two-length MLP. With the same backbone, training data, and input--output format, full-parameter SFT achieved \(72.2\% \pm 0.7\%\) across three seeds. These results show the value of using prompt and answer content and establish supervised }\DIFaddend fine-tuning \DIFdelbegin \DIFdel{shows mixed results . Its predictions on larger models (\eg Qwen2.5-3B) appear more stable, but the improvement is limited and inconsistent across domains. On smaller models like Qwen2.5-1.5B, LoRA clearly overfits, leading to erratic error patterns and unreliable auditing performance}\space{}\DIFdelend \DIFaddbegin \DIFadd{as another effective way to train the auditor}\DIFaddend .
 
 \DIFdelbegin \DIFdel{The baselines are less reliable than }%DIFDELCMD < {\n}%%%
-\DIFdel{. CoIn not only produces inaccurate predictions but also misses subtle inflation, generating high error. MLP sometimes achieves low aggregated error , which indicates it memorizes dataset-level distributions, but its high average error and low accuracy make it unsuitable for precise auditing}\DIFdelend \DIFaddbegin \DIFadd{Simple baselines can achieve low aggregate error by predicting close to the dataset mean for many requests. Their predictions add up to a reasonable total, but miss how much reasoning-token usage varies from one request to another. PALACE reduces average error on individual requests while keeping aggregate error low, so its estimates are useful both for individual requests and for the workload as a whole}\DIFaddend .
+\DIFdel{. CoIn not only produces inaccurate predictions but also misses subtle inflation, generating high error. MLP sometimes achieves low aggregated error , which indicates it memorizes dataset-level distributions, but its high average error and low accuracy make it unsuitable for precise auditing}\space{}\DIFdelend \DIFaddbegin \DIFadd{Simple baselines can achieve low aggregate error by predicting close to the dataset mean for many requests. Their predictions add up to a reasonable total, but miss how much reasoning-token usage varies from one request to another. PALACE reduces average error on individual requests while keeping aggregate error low, so its estimates are useful both for individual requests and for the workload as a whole}\DIFaddend .
 
 \subsection{Auto-Regressive Model and Task Router improves heterogeneous prediction}
 
 
-\begin{wrapfigure}{r}{0.46\textwidth}
+\begin{table}[!htbp]
 \centering
 \footnotesize
 \setlength{\tabcolsep}{4pt}
@@ -458,18 +469,14 @@ LoRA }\DIFdelend \DIFaddbegin \DIFadd{On the held-out split, PALACE achieved 68.
 \bottomrule
 \end{tabular}
 
-\vspace{-15pt}
-\end{wrapfigure}
-\DIFdelbegin \paragraph{\DIFdel{Regression vs. Classification.}}
-%DIFAUXCMD
-\addtocounter{paragraph}{-1}%DIFAUXCMD
+\end{table}
+\DIFdelbegin \par\noindent\DIFdel{Regression vs. Classification.}\par
 \DIFdelend We further examined whether a classification LLM could serve as an alternative to {\n}’s regression‑based token estimation. In the classification setting, reasoning token counts are discretized into usage buckets and the model predicts the corresponding class rather than the exact number. This design allows training by simply attaching a classification head.
 However, as shown in Table \ref{tab:tree}, the classification approach lags behind {\n}’s GRPO across almost every dataset. On Qwen2.5‑3B, classification achieves reasonable performance (\eg 62.15 on the General set), but remains notably lower than {\n}’s 87.28. Similar gaps are seen in all other domains. The trend is consistent on the smaller Qwen2.5‑1.5B model.
 % These results suggest that although the accuracy of classification models is not computed in exactly the same way as regression, the data show a clear gap between classification and regression, especially GRPO based regression. A likely reason is that classification does not fully leverage the LLM’s reasoning ability, which leads to weaker token count estimation. The details of classification dataset construction are provided in the
 % Supplementary Information.
 
 \par
-\WFclear
 
 % \begin{table}[t]
 % \caption{Regression vs classification.}
@@ -497,17 +504,21 @@ However, as shown in Table \ref{tab:tree}, the classification approach lags behi
 \DIFdelbegin %DIFDELCMD <
 
 %DIFDELCMD < %%%
-\paragraph{%DIFDELCMD < {\n} %%%
-\DIFdel{Router vs Merged Dataset.}}
-%DIFAUXCMD
-\addtocounter{paragraph}{-1}%DIFAUXCMD
+\par\noindent\DIFdel{Router vs Merged Dataset.}\par
 \DIFdelend To assess whether routing truly improves auditing performance, we compared {\n}’s router-based design with a simpler \textit{merged dataset} baseline, where all domain data were combined and a single GRPO adapter was trained across tasks. As shown in Figure \ref{fig:general_compare}, the router consistently yields stronger results on Qwen2.5‑1.5B. It achieves higher Pass@1 accuracy on nearly every subtask, from General reasoning to Medical queries, and also provides small but meaningful gains on Pass@5. This improvement comes from the router’s ability to partition inputs by domain and activate the most relevant GRPO adapter, instead of forcing one generic adapter to absorb heterogeneous reasoning styles. By doing so, the router helps {\n} mitigate variance across tasks and reduces the cross‑domain interference observed in the merged‑training setup, resulting in more stable and accurate token‑length predictions overall.
 
+\DIFaddbegin \begin{figure}[!htbp]
+    \centering
+    \includegraphics[width=1.0\linewidth]{Figures/merged.pdf}
+    \par\smallskip\textbf{\DIFaddFL{Figure~\ref{fig:general_compare}}}\par
+\end{figure}
 
-\subsection{Predictive auditing identifies simulated reporting discrepancies}
+
+\DIFaddend \subsection{Predictive auditing identifies simulated reporting discrepancies}
 
 \DIFdelbegin \DIFdel{To evaluate how }%DIFDELCMD < {\n} %%%
-\DIFdel{and baselines respond to varying error tolerances , we conduct a sensitivity analysis that adjusts the error threshold used to compute auditing accuracy. Following CoIn~\citep{sun2025coin}, we gradually relax the relative error tolerance (e.g., 10\% , }\DIFdelend \DIFaddbegin \DIFadd{Figure~\ref{fig:rateacc} summarizes prediction accuracy across error tolerances for PALACE and LoRA and detection rates across injection rates for CoIn. In a separate simulation, PALACE detected 92.9\% of batches with }\DIFaddend 30\% \DIFdelbegin \DIFdel{, }\DIFdelend \DIFaddbegin \DIFadd{overreporting at }\DIFaddend 50 \DIFdelbegin \DIFdel{\%, 100\% ) and measure how often each method correctly flags suspicious samples under each threshold.
+\DIFdel{and baselines respond to varying error tolerances , we conduct a sensitivity analysis that adjusts the error threshold used to compute auditing accuracy. Following CoIn~}%DIFDELCMD < \citep{sun2025coin}%%%
+\DIFdel{, we gradually relax the relative error tolerance (e.g., 10\% , }\DIFdelend \DIFaddbegin \DIFadd{Figure~\ref{fig:rateacc} summarizes prediction accuracy across error tolerances for PALACE and LoRA and detection rates across injection rates for CoIn. In a separate simulation, PALACE detected 92.9\% of batches with }\DIFaddend 30\% \DIFdelbegin \DIFdel{, }\DIFdelend \DIFaddbegin \DIFadd{overreporting at }\DIFaddend 50 \DIFdelbegin \DIFdel{\%, 100\% ) and measure how often each method correctly flags suspicious samples under each threshold.
 We run this comparison on Qwen2.5‑1.5B across four datasets, comparing }%DIFDELCMD < {\n} %%%
 \DIFdel{with CoIn and LoRA fine-tuning. As shown in Figure~\ref{fig:rateacc}, }%DIFDELCMD < {\n} %%%
 \DIFdel{outperforms the baselines especially at low error thresholds where small deviations must still be caught. This demonstrates that }%DIFDELCMD < {\n} %%%
@@ -515,8 +526,14 @@ We run this comparison on Qwen2.5‑1.5B across four datasets, comparing }%DIFDE
 }\DIFdelend \DIFaddbegin \DIFadd{requests per batch, with a 4.9\% false-positive rate.
 }\DIFaddend
 
+\DIFaddbegin \begin{figure}[!htbp]
+    \centering
+    \includegraphics[width=1.0\linewidth]{Figures/error.pdf}
+    \par\smallskip\textbf{\DIFaddFL{Figure~\ref{fig:rateacc}}}\par
+\end{figure}
 
-Figure~\ref{fig:grpo-math-qwen} shows the \DIFdelbegin \DIFdel{learning curve of }\DIFdelend \DIFaddbegin \DIFadd{training reward for }\DIFaddend the Qwen2.5-3B GRPO \DIFdelbegin \DIFdel{adapter on the Math dataset. The full Math training set contains 90K samples,
+
+\DIFaddend Figure~\ref{fig:grpo-math-qwen} shows the \DIFdelbegin \DIFdel{learning curve of }\DIFdelend \DIFaddbegin \DIFadd{training reward for }\DIFaddend the Qwen2.5-3B GRPO \DIFdelbegin \DIFdel{adapter on the Math dataset. The full Math training set contains 90K samples,
 but the curve plateaus roughly around }\DIFdelend \DIFaddbegin \DIFadd{auditor over one epoch on 90,000 Math examples. The reward rises early in training and fluctuates around a plateau in the second half of }\DIFaddend the \DIFdelbegin \DIFdel{middle of training: after about
 40K--50K examples, the validation Pass@1 stabilizes near its final value with
 only small fluctuations.
@@ -526,7 +543,13 @@ performance.
 }\DIFdelend \DIFaddbegin \DIFadd{run.
 }\DIFaddend
 
-\section{Discussion}
+\DIFaddbegin \begin{figure}[!htbp]
+    \centering
+    \includegraphics[width=0.75\linewidth]{Figures/grpo_exp.pdf}
+    \par\smallskip\textbf{\DIFaddFL{Figure~\ref{fig:grpo-math-qwen}}}\par
+\end{figure}
+
+\DIFaddend \section{Discussion}
 
 This work demonstrates that hidden reasoning-token usage in commercial opaque
 LLM services can be estimated from observable prompt--answer pairs. Across
@@ -563,7 +586,7 @@ the baselines across a broad range of error tolerances. Its advantage under
 stricter thresholds enables the detection of relatively small discrepancies, while cumulative analysis can reveal persistent inflation that may be difficult
 to identify from a single request. Together, these results show that predictive
 auditing can support both fine-grained inspection and long-term monitoring of
-hidden-token usage}\DIFdelend \DIFaddbegin \DIFadd{follow-up, but reasoning lengths vary substantially across requests. At a nominal 5\% false-positive rate, PALACE detected 11.3--36.8\% of individual requests with 30\% overreporting across the four domains. For batches of 50 requests, the detection rate reached 92.9\% with a 4.9\% false-positive rate. This increase shows how aggregating requests makes systematic overreporting easier to detect}\DIFaddend .
+hidden-token usage}\space{}\DIFdelend \DIFaddbegin \DIFadd{follow-up, but reasoning lengths vary substantially across requests. At a nominal 5\% false-positive rate, PALACE detected 11.3--36.8\% of individual requests with 30\% overreporting across the four domains. For batches of 50 requests, the detection rate reached 92.9\% with a 4.9\% false-positive rate. This increase shows how aggregating requests makes systematic overreporting easier to detect}\DIFaddend .
 
 Predictive auditing provides a different deployment trade-off from
 cryptographic verification. Cryptographic methods can offer stronger guarantees
@@ -583,7 +606,7 @@ reasoning budget, or tool-use policy }\DIFdelend \DIFaddbegin \DIFadd{in model s
 router also assumes a predefined set of domains and may be less effective on
 mixed-domain or previously unseen requests . Future work can extend the framework
 through continual calibration, open-set routing, uncertainty estimation, and joint auditing of other hidden computational components such as tool calls and
-retrieval operations}\DIFdelend \DIFaddbegin \DIFadd{When coding requests made up 70\% of the workload, a per-domain calibration correction reduced the false-positive rate for 100-request batches from 25.9\% to 3.5\%. Our evaluation uses open-model traces and simulated overreporting}\DIFaddend .
+retrieval operations}\space{}\DIFdelend \DIFaddbegin \DIFadd{When coding requests made up 70\% of the workload, a per-domain calibration correction reduced the false-positive rate for 100-request batches from 25.9\% to 3.5\%. Our evaluation uses open-model traces and simulated overreporting}\DIFaddend .
 
 Overall, {\n} establishes reasoning-length prediction as an effective foundation
 for auditing hidden token usage in opaque LLM services. By combining semantic
@@ -594,7 +617,13 @@ path toward more transparent and auditable commercial LLM services.
 
 \section{Methods}
 
-\subsection{Dataset Construction}
+\DIFaddbegin \begin{figure}[!htbp]
+    \centering
+    \includegraphics[width=0.95\linewidth]{Figures/workflow.pdf}
+    \par\smallskip\textbf{\DIFaddFL{Figure~\ref{fig:workflow}}}\par
+\end{figure}
+
+\DIFaddend \subsection{Dataset Construction}
 \label{sec:dataset}
 
 Since prior work does not address auditing the reasoning length based solely on prompt--answer pairs, we construct the first \textit{reasoning length auditing dataset}. Specifically, we curate four datasets comprising multi-step reasoning traces generated by DeepSeek-R1~\citep{guo2025deepseek} and DeepSeek-R1-Distill-Llama-70B. These datasets span diverse domains to support generalization and robust evaluation~\citep{openr1}:
@@ -612,16 +641,20 @@ Since prior work does not address auditing the reasoning length based solely on 
 We refer to these datasets as $\mathcal{D}_M$, $\mathcal{D}_C$, $\mathcal{D}_{\text{Med}}$, and $\mathcal{D}_G$, respectively.
 
 
-\DIFdelbegin \paragraph{\DIFdel{GRPO Auditing Dataset}}
-%DIFAUXCMD
-\addtocounter{paragraph}{-1}%DIFAUXCMD
+\DIFdelbegin \par\noindent\DIFdel{GRPO Auditing Dataset}\par
 %DIFDELCMD <
 
 %DIFDELCMD < %%%
 \DIFdelend The GRPO auditing dataset is constructed to train the auditing model under GRPO. Unlike a supervised regression dataset that uses ground-truth labels for direct loss computation, this dataset provides reference values that GRPO converts into reward signals for policy optimization.
 Each sample consists of a structured prompt that includes a \texttt{<Problem>} section providing the user prompt, a \texttt{<Solution>} section showing the response from COLS, and explicit instructions directing the model to generate step-by-step reasoning inside \texttt{<think>} tags and output a predicted token count in JSON format within \texttt{<answer>} tags. To stabilize training and improve estimation accuracy, the prompt also provides auxiliary cues such as prompt and answer token lengths, which correlate with reasoning complexity. This structured setup provides the reference for reward computation, allowing GRPO to refine both the reasoning process and the accuracy of token count predictions across domains. The complete training prompt is provided in Figure~\ref{fig:input_rl}.
 
-\subsection{Auditing models}
+\DIFaddbegin \begin{figure}[!htbp]
+    \centering
+    \includegraphics[width=0.91\linewidth]{Figures/figure6.pdf}
+    \par\smallskip\textbf{\DIFaddFL{Figure~\ref{fig:input_rl}}}\par
+\end{figure}
+
+\DIFaddend \subsection{Auditing models}
 
 As illustrated in Figure~\ref{fig:workflow}, \n serves as a trusted third-party auditor for commercial LLM services. It begins by acquiring a lightweight auxiliary dataset from the COLS provider and constructing an auditing dataset based on it. A general-purpose auditing model is then obtained by fine-tuning a base LLM on generic QA tasks.
 To accommodate diverse reasoning styles across domains and LLM APIs, \n further applies GRPO on domain-specific datasets to derive task-specific parameter deltas, referred to as GRPO-augmented modules. A lightweight router is trained to classify user prompts by domain and select the appropriate GRPO-augmented module for inference.
@@ -640,7 +673,7 @@ To establish the auditing capability, \n first fine-tunes a base LLM $\mathcal{W
 \DIFaddbegin \DIFadd{Here \(\mathcal{L}_{\mathcal{W}}(x,y)=-T^{-1}\sum_{t=1}^{T}\log p_{\mathcal{W}}(a_t\mid x,a_{<t})\) is the next-token cross-entropy averaged over the \(T\) tokens of the numeric target \(y\). The input \(x\) contains the problem and final answer in the auditor template, and only the target tokens \(a_1,\ldots,a_T\) contribute to the loss.
 }\DIFaddend
 
-Because reasoning complexity varies significantly across tasks and models, we further enhance $\mathcal{W}_G$ using GRPO on domain-specific datasets. For each \DIFdelbegin \DIFdel{target domain and COLS model (\eg coding domain on OpenAI's O3-mini)}\DIFdelend \DIFaddbegin \DIFadd{domain \(d\)}\DIFaddend , we perform GRPO on \DIFdelbegin \DIFdel{$\mathcal{D}_C$ to inject reasoning-specific adaptation into the model. }\DIFdelend \DIFaddbegin \DIFadd{its corresponding dataset \(\mathcal{D}_d\). For coding, this dataset is \(\mathcal{D}_C\). }\DIFaddend The resulting GRPO-updated model is stored as a domain-specific delta.
+Because reasoning complexity varies significantly across tasks and models, we further enhance $\mathcal{W}_G$ using GRPO on domain-specific datasets. For each \DIFdelbegin \DIFdel{target domain and COLS model (\eg coding domain on OpenAI's O3-mini)}\space{}\DIFdelend \DIFaddbegin \DIFadd{domain \(d\)}\DIFaddend , we perform GRPO on \DIFdelbegin \DIFdel{$\mathcal{D}_C$ to inject reasoning-specific adaptation into the model. }\DIFdelend \DIFaddbegin \DIFadd{its corresponding dataset \(\mathcal{D}_d\). For coding, this dataset is \(\mathcal{D}_C\). }\DIFaddend The resulting GRPO-updated model is stored as a domain-specific delta.
 We define a reward function that encourages accurate predictions within a relative error threshold $\delta$ and accounts for the underlying reasoning complexity. Let $y$ be the ground-truth hidden reasoning token count and $\hat{y}$ be the predicted reasoning length from auxiliary data.
 The reward is defined as:
 
@@ -695,7 +728,7 @@ This design ensures scalability and efficiency while leveraging domain-specific 
 
 \subsection{Training configurations}
 
-We select lightweight yet capable LLMs with strong reasoning ability in experiments. For auditing models, we use Qwen2.5-1.5B~\citep{qwen2.5}, Qwen2.5-3B, LLaMA3.2-1B~\citep{dubey2024llama}, and LLaMA3.2-3B. For benchmarks, we adopt the four datasets introduced in \DIFdelbegin \DIFdel{Section~\ref{sec:dataset}}\DIFdelend \DIFaddbegin \DIFadd{the Methods subsection \emph{Dataset Construction}}\DIFaddend , covering diverse reasoning domains including mathematics, programming, medical reasoning, and general problem solving~\citep{openr1}. These datasets are used to evaluate {\n} and all baselines, thus providing comprehensive coverage of common reasoning tasks for large language models.
+We select lightweight yet capable LLMs with strong reasoning ability in experiments. For auditing models, we use Qwen2.5-1.5B~\citep{qwen2.5}, Qwen2.5-3B, LLaMA3.2-1B~\citep{dubey2024llama}, and LLaMA3.2-3B. For benchmarks, we adopt the four datasets introduced in \DIFdelbegin \DIFdel{Section~\ref{sec:dataset}}\DIFdelend \DIFaddbegin \DIFadd{the Methods subsection }\emph{\DIFadd{Dataset Construction}}\DIFaddend , covering diverse reasoning domains including mathematics, programming, medical reasoning, and general problem solving~\citep{openr1}. These datasets are used to evaluate {\n} and all baselines, thus providing comprehensive coverage of common reasoning tasks for large language models.
 
 We use Verl~\citep{sheng2024hybridflow} as the training codebase. The relevant settings include: a generation temperature of 0.8, a total batch size of 128 (with 8 rollouts per strategy), an update batch size of 128 per GRPO step, KL penalty $\beta$ = 0.001, and a learning rate of 1e-6.
 For the LoRA fine-tuning, we set the LoRA rank to 128, use a batch size of 128, and control the learning rate at 1e-5.
@@ -711,7 +744,9 @@ We compare our method against three baselines, including the prior work CoIn~\ci
 \end{itemize}
 For each dataset, we evaluate auditing performance using the following four metrics:
 \begin{itemize}
-\item \textbf{Accuracy}: \DIFdelbegin \DIFdel{A prediction is considered }\DIFdelend \DIFaddbegin \DIFadd{We consider a prediction }\DIFaddend correct if its \DIFdelbegin \DIFdel{relative error }\DIFdelend \DIFaddbegin \DIFadd{absolute relative error against the reference count }\DIFaddend is below 33\%\DIFdelbegin \DIFdel{compared to the ground truth. Here we set the }\DIFdelend \DIFaddbegin \DIFadd{. We use this tolerance because prior work reported approximately }\DIFaddend 33\% \DIFdelbegin \DIFdel{threshold because, on the hardest \textit{math} and \textit{coding} datasets, the same LLM exhibits $\approx 33\%$ intra-model variance in hidden }\DIFdelend \DIFaddbegin \DIFadd{variation in }\DIFaddend reasoning length for \DIFdelbegin \DIFdel{identical prompts}\DIFdelend \DIFaddbegin \DIFadd{repeated runs of the same model on identical prompts in difficult math and coding tasks}\DIFaddend ~\citep{sun2025invisible}. \DIFdelbegin \DIFdel{Accordingly, if the inflation exceeds $33\%$, our auditing method should reliably flag it as a detectable anomaly. As shown in }\DIFdelend Figure~\ref{fig:rateacc} \DIFdelbegin \DIFdel{, we further evaluate }%DIFDELCMD < {\n} %%%
+\item \textbf{Accuracy}: \DIFdelbegin \DIFdel{A prediction is considered }\DIFdelend \DIFaddbegin \DIFadd{We consider a prediction }\DIFaddend correct if its \DIFdelbegin \DIFdel{relative error }\DIFdelend \DIFaddbegin \DIFadd{absolute relative error against the reference count }\DIFaddend is below 33\%\DIFdelbegin \DIFdel{compared to the ground truth. Here we set the }\DIFdelend \DIFaddbegin \DIFadd{. We use this tolerance because prior work reported approximately }\DIFaddend 33\% \DIFdelbegin \DIFdel{threshold because, on the hardest }\textit{\DIFdel{math}} %DIFAUXCMD
+\DIFdel{and }\textit{\DIFdel{coding}} %DIFAUXCMD
+\DIFdel{datasets, the same LLM exhibits $\approx 33\%$ intra-model variance in hidden }\DIFdelend \DIFaddbegin \DIFadd{variation in }\DIFaddend reasoning length for \DIFdelbegin \DIFdel{identical prompts}\space{}\DIFdelend \DIFaddbegin \DIFadd{repeated runs of the same model on identical prompts in difficult math and coding tasks}\DIFaddend ~\citep{sun2025invisible}. \DIFdelbegin \DIFdel{Accordingly, if the inflation exceeds $33\%$, our auditing method should reliably flag it as a detectable anomaly. As shown in }\DIFdelend Figure~\ref{fig:rateacc} \DIFdelbegin \DIFdel{, we further evaluate }%DIFDELCMD < {\n} %%%
 \DIFdel{under thresholds ranging }\DIFdelend \DIFaddbegin \DIFadd{also shows prediction accuracy at tolerances }\DIFaddend from 10\% to 100\%\DIFdelbegin \DIFdel{, where it consistently outperforms baselines}\DIFdelend \DIFaddbegin \DIFadd{. For the detection experiments, we calibrate separate decision thresholds on clean requests}\DIFaddend .
 
 \begin{itemize}
@@ -753,11 +788,11 @@ Since LoRA fine-tuning does not require the model to generate an explicit reason
 \texttt{You are an AI reasoning analyzer. Given a math problem and the model output together with their token length, estimate how many tokens were used in the detailed reasoning process that led to the answer:} \\
 
 \texttt{Problem: }
-\DIFdelbeginFL \DIFdelFL{\textcolor{blue}{\texttt{\{problem\}}} }\DIFdelendFL \DIFaddbeginFL \DIFaddFL{\texttt{\{problem\}} }\DIFaddendFL \\
+\DIFdelbeginFL \DIFdelFL{\textcolor{blue}{\texttt{\{problem\}}} }\DIFdelendFL \DIFaddbeginFL \texttt{\DIFaddFL{\{problem\}}} \DIFaddendFL \\
 
 \vspace{0.5em}
 \texttt{Answer: }
-\DIFdelbeginFL \DIFdelFL{\textcolor{blue}{\texttt{\{solution\}}} }\DIFdelendFL \DIFaddbeginFL \DIFaddFL{\texttt{\{solution\}} }\DIFaddendFL \\
+\DIFdelbeginFL \DIFdelFL{\textcolor{blue}{\texttt{\{solution\}}} }\DIFdelendFL \DIFaddbeginFL \texttt{\DIFaddFL{\{solution\}}} \DIFaddendFL \\
 
 \vspace{0.5em}
 \texttt{The approximate number of tokens in the reasoning process is: \DIFdelbeginFL \DIFdelFL{\textcolor{red}{\{Reasoning Length\}}}\DIFdelendFL \DIFaddbeginFL \DIFaddFL{\{Reasoning Length\}}\DIFaddendFL }
@@ -789,7 +824,7 @@ Since LoRA fine-tuning does not require the model to generate an explicit reason
 The datasets used in this study are derived from publicly available reasoning
 datasets, including OpenR1-Math, OpenR1-Code, HuatuoGPT-o1, and general
 reasoning data generated by DeepSeek-R1-Distill-Llama-70B. Details of dataset
-construction and preprocessing are provided in \DIFdelbegin \DIFdel{the MethodsSection}\DIFdelend \DIFaddbegin \DIFadd{Methods}\DIFaddend . The processed datasets used for training and evaluation will be
+construction and preprocessing are provided in \DIFdelbegin \DIFdel{the MethodsSection}\space{}\DIFdelend \DIFaddbegin \DIFadd{Methods}\DIFaddend . The processed datasets used for training and evaluation will be
 made publicly available upon publication.
 
 \section*{Code Availability}
@@ -810,7 +845,7 @@ Z.W. and G.S. drafted the manuscript, and all authors reviewed and approved the 
 
 \section*{Competing Interests}
 
-A.L. \DIFdelbegin \DIFdel{serves as }\DIFdelend \DIFaddbegin \DIFadd{is }\DIFaddend a Guest Editor \DIFdelbegin \DIFdel{for the Collection to which this manuscript is submitted and }\DIFdelend \DIFaddbegin \DIFadd{of the Collection \emph{Securing the Core: Preventing Unauthorized Use and Manipulation of Large Language Models} in \emph{npj Artificial Intelligence}. A.L. }\DIFaddend was not involved in the \DIFdelbegin \DIFdel{editorial handling, peer review , or decision-making process for }\DIFdelend \DIFaddbegin \DIFadd{journal's review of, or decisions related to, }\DIFaddend this manuscript. The \DIFdelbegin \DIFdel{remaining authors declare no competing interests}\DIFdelend \DIFaddbegin \DIFadd{other authors do not have a competing interest}\DIFaddend .
+A.L. \DIFdelbegin \DIFdel{serves as }\DIFdelend \DIFaddbegin \DIFadd{is }\DIFaddend a Guest Editor \DIFdelbegin \DIFdel{for the Collection to which this manuscript is submitted and }\DIFdelend \DIFaddbegin \DIFadd{of the Collection }\emph{\DIFadd{Securing the Core: Preventing Unauthorized Use and Manipulation of Large Language Models}} \DIFadd{in }\emph{\DIFadd{npj Artificial Intelligence}}\DIFadd{. A.L. }\DIFaddend was not involved in the \DIFdelbegin \DIFdel{editorial handling, peer review , or decision-making process for }\DIFdelend \DIFaddbegin \DIFadd{journal's review of, or decisions related to, }\DIFaddend this manuscript. The \DIFdelbegin \DIFdel{remaining authors declare no competing interests}\space{}\DIFdelend \DIFaddbegin \DIFadd{other authors do not have a competing interest}\DIFaddend .
 
 \section*{Funding}
 
@@ -837,7 +872,7 @@ This research received no external funding.
 %% file, and delete the associated \verb+\bibliography+ commands.                            %%
 %%===========================================================================================%%
 
-\DIFaddbegin \section*{\DIFadd{Acknowledgements}}
+\DIFaddbegin \section*{Acknowledgements}
 \DIFadd{Not applicable
 }
 
@@ -849,7 +884,7 @@ This research received no external funding.
 
 
 \clearpage
-\section*{\DIFadd{Figure Legends}}
+\section*{Figure Legends}
 \renewcommand{\figurename}{Figure}
 
 \captionof{figure}{Users of commercial opaque large language model services cannot directly verify charges for hidden reasoning tokens. Dashed gray outlines separate the user and provider. Black arrows trace the user prompt through the provider's application programming interface (API) to the reasoning large language model (LLM) and show the return of answer tokens and charges. Document icons depict the answer and hidden reasoning tokens, and banknote icons depict charges. The red dashed box highlights the charge for hidden reasoning. The red cross marks the unavailable reasoning-token record and the question mark indicates that the associated charge cannot be directly verified. COLS, commercial opaque LLM services.}\label{fig:problem}
