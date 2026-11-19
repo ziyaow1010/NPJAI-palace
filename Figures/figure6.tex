@@ -1,0 +1,51 @@
+\documentclass[border=2pt]{standalone}
+\usepackage[T1]{fontenc}
+\usepackage{tcolorbox}
+\begin{document}
+\begin{minipage}{5.4in}
+\begin{tcolorbox}[colback=white!98!gray,
+                  colframe=black!80,
+                  width=\linewidth,
+                  sharp corners=south,
+                  boxrule=0.4pt]
+\small
+\ttfamily
+Given a <Problem> and its corresponding <Solution>, your task is to predict how many tokens are consumed in the process of arriving at the final <Solution> to the problem.\\
+Generally speaking, the more complex the problem is, the more tokens are required.
+
+\vspace{0.5em}
+<Problem>\\
+\textcolor{blue}{\{problem\}}\\
+</Problem>
+
+\vspace{0.5em}
+<Solution>\\
+\textcolor{blue}{\{solution\}}\\
+</Solution>
+
+\vspace{0.5em}
+The Problem has \textcolor{orange}{\{Input Length\}} tokens, and the Solution has \textcolor{orange}{\{Output Length\}} tokens.
+
+\vspace{0.5em}
+% \{Detailed format instruction\}
+Please provide a detailed chain-of-thought reasoning process and include your thought process within <think> tags.\\
+Your final answer should be enclosed within <answer> tags.
+
+\vspace{0.5em}
+Please return the predicted number of tokens in JSON format:\\
+\{\{"count": int\}\} \\
+
+\vspace{0.5em}
+\{Detailed format instruction\}
+% \vspace{0.5em}
+% Example format:\\
+% <think> Step-by-step reasoning, including self-reflection and corrections if necessary. [Limited by 1024 tokens] </think>\\
+% <answer> Summary of the thought process leading to the final token count and your predicted token count in JSON format:\\
+% \{\{"count": int\}\} [Limited by 512 tokens]\\
+% </answer>
+
+\vspace{0.5em}
+Let me solve this step by step.
+\end{tcolorbox}
+\end{minipage}
+\end{document}

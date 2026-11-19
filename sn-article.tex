@@ -51,9 +51,6 @@
 \usepackage{textcomp}%
 \usepackage{manyfoot}%
 \usepackage{booktabs}%
-\usepackage{algorithm}%
-\usepackage{algorithmicx}%
-\usepackage{algpseudocode}%
 \usepackage{listings}%
 %%%%
 \usepackage{xspace}
@@ -110,25 +107,25 @@
 %%  \sfx{IV}}\email{iauthor@gmail.com}
 %%=============================================================%%
 
-\author[]{\fnm{Ziyao} \sur{Wang}}\email{ziyaow@umd.edu}
+\author[1]{\fnm{Ziyao} \sur{Wang}}\email{ziyaow@umd.edu}
 \equalcont{These authors contributed equally to this work.}
 
-\author[]{\fnm{Guoheng} \sur{Sun}}\email{ghsun@umd.edu}
+\author[1]{\fnm{Guoheng} \sur{Sun}}\email{ghsun@umd.edu}
 \equalcont{These authors contributed equally to this work.}
 
-\author[]{\fnm{Yexiao} \sur{He}}\email{yexiaohe@umd.edu}
+\author[1]{\fnm{Yexiao} \sur{He}}\email{yexiaohe@umd.edu}
 % \equalcont{These authors contributed equally to this work.}
 
-\author[]{\fnm{Zheyu} \sur{Shen}}\email{zyshen@umd.edu}
+\author[1]{\fnm{Zheyu} \sur{Shen}}\email{zyshen@umd.edu}
 % \equalcont{These authors contributed equally to this work.}
 
-\author[]{\fnm{Bowei} \sur{Tian}}\email{boweitian@umd.edu}
+\author[1]{\fnm{Bowei} \sur{Tian}}\email{boweitian@umd.edu}
 % \equalcont{These authors contributed equally to this work.}
 
-\author*[]{\fnm{Ang} \sur{Li (corresponding author)}}\email{angliece@umd.edu}
+\author*[1]{\fnm{Ang} \sur{Li}}\email{angliece@umd.edu}
 % \equalcont{These authors contributed equally to this work.}
 
-\affil[]{\orgname{University of Maryland, College Park}}
+\affil[1]{\orgname{University of Maryland}, \orgaddress{\city{College Park}, \state{Maryland}, \country{USA}}}
 
 % \affil[2]{\orgdiv{Department}, \orgname{Organization}, \orgaddress{\street{Street}, \city{City}, \postcode{10587}, \state{State}, \country{Country}}}
 
@@ -158,6 +155,8 @@
 
 %%\pacs[MSC Classification]{35A01, 65L10, 65L12, 65L20, 65L70}
 
+\setcounter{secnumdepth}{0}
+
 \maketitle
 
 \section{Introduction}
@@ -166,15 +165,6 @@ Large language models (LLMs) increasingly rely on extended internal computation 
 
 To protect model security and intellectual property, commercial providers such as OpenAI~\citep{openai2025reasoning}, Google~\citep{google2025thinking}, and Anthropic typically do not reveal the complete internal traces produced during reasoning or tool execution. Users may nevertheless be charged for the associated internal tokens in addition to the visible response. Services with this property have been described as \textit{Commercial Opaque LLM Services} (COLS)~\citep{sun2025invisible}. Figure~\ref{fig:problem} illustrates the transparency concern of COLS, where users can observe the final answer but cannot directly verify the hidden reasoning-token usage.
 
-\begin{wrapfigure}{r}{0.48\textwidth}
-  \centering
-  \vspace{-10pt}
-  \includegraphics[width=\linewidth]{Figures/intro.pdf}
-  \vspace{-10pt}
-  \caption{The transparency concern of COLS.}
-  \label{fig:problem}
-  \vspace{-10pt}
-\end{wrapfigure}
 This opaque design raises notable transparency gaps: \textbf{users are charged for token usage they cannot observe or verify}. All token consumption is reported solely by the service provider, whose financial incentives may conflict with those of the user. This creates the risk of \textit{token inflation}, where COLS may over-report token usage to increase billing. 
 Empirical studies show that in many state-of-the-art models, over 90\% of tokens are consumed in hidden reasoning, with only a small portion forming the final answer~\citep{sun2025coin}. Even minor inflation under such conditions can lead to considerable increases in expenses, particularly for large-scale API users engaged in synthetic data generation, annotation, or document processing. 
 For example, an ARC-AGI run with OpenAI's o3 model consumed 111 million tokens at a cost of \$66,772~\citep{chollet2025o3}, with over 60\% from hidden reasoning tokens. Although there is no evidence of inflation in COLS, the large monetary amounts involved mean that users have legitimate reasons to expect clearer auditing mechanisms, highlighting the need for greater transparency in LLM services. Existing work on auditing commercial LLM services has primarily considered either service-quality substitution or direct verification of reported execution. For quality downgrade, prior studies detect whether a provider silently substitutes a smaller model or a cheaper execution pipeline using output-based statistical tests, benchmark comparisons, log-probability analysis, or trusted execution environments~\citep{cai2025you,yuan2025trust,nvidia2023confidential}. For quantity inflation, CoIn~\citep{sun2025coin} constructs a hash-tree-based mechanism that allows an auditor to verify token counts and semantic consistency through
@@ -293,7 +283,9 @@ Our main contributions are summarized as follows:
 
 \section{Results}
 
-\subsection{Predicting hidden reasoning-token usage.} Table~\ref{tab:acc_err} demonstrates that {\n} achieves the strongest
+\subsection{Predicting hidden reasoning-token usage}
+
+Table~\ref{tab:acc_err} demonstrates that {\n} achieves the strongest
 overall Pass@1 prediction performance across most domains and model sizes. By leveraging semantic information rather than relying solely on text length and utilizing the reasoning abilities of the auditing model, {\n} consistently delivers high Pass@1 accuracy, even on reasoning-heavy tasks like mathematics. For instance, {\n} predicts the reasoning length with 63.81\% accuracy under the 33\% relative error, while baselines cannot exceed even 50\% accuracy in the same setting.
 LoRA fine-tuning achieves higher Pass@5 in most Table~\ref{tab:acc_err} comparisons. Pass@5 measures whether at least one of five samples falls within the prediction tolerance, and the detection experiments use a single greedy prediction.
 
@@ -302,13 +294,6 @@ For CoIn, Table~\ref{tab:acc_err} reports the fraction of injected samples corre
 On the held-out split, PALACE achieved 68.6\% Pass@33 across four domains, compared with 54.8\% for per-domain LightGBM using length and surface features and 49.1\% for the two-length MLP. With the same backbone, training data, and input--output format, full-parameter SFT achieved \(72.2\% \pm 0.7\%\) across three seeds. These results show the value of using prompt and answer content and establish supervised fine-tuning as another effective way to train the auditor.
 
 Simple baselines can achieve low aggregate error by predicting close to the dataset mean for many requests. Their predictions add up to a reasonable total, but miss how much reasoning-token usage varies from one request to another. PALACE reduces average error on individual requests while keeping aggregate error low, so its estimates are useful both for individual requests and for the workload as a whole.
-
-\begin{figure*}[tbp]
-    \centering
-    \includegraphics[width=0.98\textwidth]{Figures/merged.pdf} 
-    \caption{{\n} router vs LLM trained on merged dataset. Experiments are conducted on Qwen2.5-1.5B model.}
-    \label{fig:general_compare}
-\end{figure*}
 
 \subsection{Auto-Regressive Model and Task Router improves heterogeneous prediction}
 
@@ -353,7 +338,6 @@ Simple baselines can achieve low aggregate error by predicting close to the data
 
 \vspace{-15pt}
 \end{wrapfigure}
-\paragraph{Regression vs. Classification.}
 We further examined whether a classification LLM could serve as an alternative to {\n}’s regression‑based token estimation. In the classification setting, reasoning token counts are discretized into usage buckets and the model predicts the corresponding class rather than the exact number. This design allows training by simply attaching a classification head.
 However, as shown in Table \ref{tab:tree}, the classification approach lags behind {\n}’s GRPO across almost every dataset. On Qwen2.5‑3B, classification achieves reasonable performance (\eg 62.15 on the General set), but remains notably lower than {\n}’s 87.28. Similar gaps are seen in all other domains. The trend is consistent on the smaller Qwen2.5‑1.5B model.
 % These results suggest that although the accuracy of classification models is not computed in exactly the same way as regression, the data show a clear gap between classification and regression, especially GRPO based regression. A likely reason is that classification does not fully leverage the LLM’s reasoning ability, which leads to weaker token count estimation. The details of classification dataset construction are provided in the
@@ -385,30 +369,11 @@ However, as shown in Table \ref{tab:tree}, the classification approach lags behi
 % 	\end{tabular}}
 %     \vspace{-0.1cm}
 % \end{table}
-\begin{figure*}[t]
-    \centering
-    \includegraphics[width=\textwidth]{Figures/error.pdf} 
-    \caption{Across four domains, PALACE and LoRA report Pass@1 at each error tolerance, and CoIn reports detection rates at the corresponding token-injection rates.}
-    \label{fig:rateacc}
-\end{figure*}
-
-
-\paragraph{{\n} Router vs Merged Dataset.}
 To assess whether routing truly improves auditing performance, we compared {\n}’s router-based design with a simpler \textit{merged dataset} baseline, where all domain data were combined and a single GRPO adapter was trained across tasks. As shown in Figure \ref{fig:general_compare}, the router consistently yields stronger results on Qwen2.5‑1.5B. It achieves higher Pass@1 accuracy on nearly every subtask, from General reasoning to Medical queries, and also provides small but meaningful gains on Pass@5. This improvement comes from the router’s ability to partition inputs by domain and activate the most relevant GRPO adapter, instead of forcing one generic adapter to absorb heterogeneous reasoning styles. By doing so, the router helps {\n} mitigate variance across tasks and reduces the cross‑domain interference observed in the merged‑training setup, resulting in more stable and accurate token‑length predictions overall.
 
 
 \subsection{Predictive auditing identifies simulated reporting discrepancies}
 
-\begin{wrapfigure}{r}{0.5\textwidth}
-    \centering
-    \vspace{-15pt}
-    \includegraphics[width=\linewidth]{Figures/grpo_exp.pdf}
-    \vspace{-8pt}
-    \caption{GRPO training curve of the Qwen2.5-3B auditor on the Math dataset
-    with 90K samples over one epoch. The $y$-axis shows the accuracy reward,
-    and the $x$-axis shows the training step.}
-    \label{fig:grpo-math-qwen}
-\end{wrapfigure}
 Figure~\ref{fig:rateacc} summarizes prediction accuracy across error tolerances for PALACE and LoRA and detection rates across injection rates for CoIn. In a separate simulation, PALACE detected 92.9\% of batches with 30\% overreporting at 50 requests per batch, with a 4.9\% false-positive rate.
 
 
@@ -459,14 +424,6 @@ path toward more transparent and auditable commercial LLM services.
 
 \section{Methods}
 
-\begin{figure*}[t]
-    \centering
-    \includegraphics[width=0.85\textwidth]{Figures/workflow.pdf}
-    \caption{Workflow of {\n}.}
-    \vspace{-0.2cm}
-    \label{fig:workflow}
-\end{figure*}
-
 \subsection{Dataset Construction}
 \label{sec:dataset}
 
@@ -484,61 +441,9 @@ Since prior work does not address auditing the reasoning length based solely on 
 
 We refer to these datasets as $\mathcal{D}_M$, $\mathcal{D}_C$, $\mathcal{D}_{\text{Med}}$, and $\mathcal{D}_G$, respectively.
 
-\paragraph{GRPO Auditing Dataset}
 
 The GRPO auditing dataset is constructed to train the auditing model under GRPO. Unlike a supervised regression dataset that uses ground-truth labels for direct loss computation, this dataset provides reference values that GRPO converts into reward signals for policy optimization.  
 Each sample consists of a structured prompt that includes a \texttt{<Problem>} section providing the user prompt, a \texttt{<Solution>} section showing the response from COLS, and explicit instructions directing the model to generate step-by-step reasoning inside \texttt{<think>} tags and output a predicted token count in JSON format within \texttt{<answer>} tags. To stabilize training and improve estimation accuracy, the prompt also provides auxiliary cues such as prompt and answer token lengths, which correlate with reasoning complexity. This structured setup provides the reference for reward computation, allowing GRPO to refine both the reasoning process and the accuracy of token count predictions across domains. The complete training prompt is provided in Figure~\ref{fig:input_rl}.
-
-\begin{figure}[!t]
-\begin{tcolorbox}[colback=white!98!gray,
-                  colframe=black!80,
-                  title=Prompt Template for Chain-of-Thought Reasoning with JSON Output,
-                  fonttitle=\bfseries,
-                  width=\linewidth,
-                  sharp corners=south,
-                  boxrule=0.4pt]
-\small
-\ttfamily
-Given a <Problem> and its corresponding <Solution>, your task is to predict how many tokens are consumed in the process of arriving at the final <Solution> to the problem.\\
-Generally speaking, the more complex the problem is, the more tokens are required.
-
-\vspace{0.5em}
-<Problem>\\
-\textcolor{blue}{\{problem\}}\\
-</Problem>
-
-\vspace{0.5em}
-<Solution>\\
-\textcolor{blue}{\{solution\}}\\
-</Solution>
-
-\vspace{0.5em}
-The Problem has \textcolor{orange}{\{Input Length\}} tokens, and the Solution has \textcolor{orange}{\{Output Length\}} tokens.
-
-\vspace{0.5em}
-% \{Detailed format instruction\}
-Please provide a detailed chain-of-thought reasoning process and include your thought process within <think> tags.\\
-Your final answer should be enclosed within <answer> tags.
-
-\vspace{0.5em}
-Please return the predicted number of tokens in JSON format:\\
-\{\{"count": int\}\} \\
-
-\vspace{0.5em}
-\{Detailed format instruction\}
-% \vspace{0.5em}
-% Example format:\\
-% <think> Step-by-step reasoning, including self-reflection and corrections if necessary. [Limited by 1024 tokens] </think>\\
-% <answer> Summary of the thought process leading to the final token count and your predicted token count in JSON format:\\
-% \{\{"count": int\}\} [Limited by 512 tokens]\\
-% </answer>
-
-\vspace{0.5em}
-Let me solve this step by step.
-\end{tcolorbox}
-\caption{Instructional prompt template for GRPO-augmented auditing model training.}
-\label{fig:input_rl}
-\end{figure}
 
 \subsection{Auditing models}
 
@@ -611,7 +516,7 @@ This design ensures scalability and efficiency while leveraging domain-specific 
 
 \subsection{Training configurations}
 
-We select lightweight yet capable LLMs with strong reasoning ability in experiments. For auditing models, we use Qwen2.5-1.5B~\citep{qwen2.5}, Qwen2.5-3B, LLaMA3.2-1B~\citep{dubey2024llama}, and LLaMA3.2-3B. For benchmarks, we adopt the four datasets introduced in Section~\ref{sec:dataset}, covering diverse reasoning domains including mathematics, programming, medical reasoning, and general problem solving~\citep{openr1}. These datasets are used to evaluate {\n} and all baselines, thus providing comprehensive coverage of common reasoning tasks for large language models.
+We select lightweight yet capable LLMs with strong reasoning ability in experiments. For auditing models, we use Qwen2.5-1.5B~\citep{qwen2.5}, Qwen2.5-3B, LLaMA3.2-1B~\citep{dubey2024llama}, and LLaMA3.2-3B. For benchmarks, we adopt the four datasets introduced in the Methods subsection \emph{Dataset Construction}, covering diverse reasoning domains including mathematics, programming, medical reasoning, and general problem solving~\citep{openr1}. These datasets are used to evaluate {\n} and all baselines, thus providing comprehensive coverage of common reasoning tasks for large language models.
 
 We use Verl~\citep{sheng2024hybridflow} as the training codebase. The relevant settings include: a generation temperature of 0.8, a total batch size of 128 (with 8 rollouts per strategy), an update batch size of 128 per GRPO step, KL penalty $\beta$ = 0.001, and a learning rate of 1e-6. 
 For the LoRA fine-tuning, we set the LoRA rank to 128, use a batch size of 128, and control the learning rate at 1e-5.
@@ -667,14 +572,14 @@ Since LoRA fine-tuning does not require the model to generate an explicit reason
 \texttt{You are an AI reasoning analyzer. Given a math problem and the model output together with their token length, estimate how many tokens were used in the detailed reasoning process that led to the answer:} \\
 
 \texttt{Problem: }
-\textcolor{blue}{\texttt{\{problem\}}} \\
+\texttt{\{problem\}} \\
 
 \vspace{0.5em}
 \texttt{Answer: }
-\textcolor{blue}{\texttt{\{solution\}}} \\
+\texttt{\{solution\}} \\
 
 \vspace{0.5em}
-\texttt{The approximate number of tokens in the reasoning process is: \textcolor{red}{\{Reasoning Length\}}}
+\texttt{The approximate number of tokens in the reasoning process is: \{Reasoning Length\}}
 \end{tcolorbox}
 \label{tab:input_reg}
 \end{table*}
@@ -703,14 +608,12 @@ Since LoRA fine-tuning does not require the model to generate an explicit reason
 The datasets used in this study are derived from publicly available reasoning
 datasets, including OpenR1-Math, OpenR1-Code, HuatuoGPT-o1, and general
 reasoning data generated by DeepSeek-R1-Distill-Llama-70B. Details of dataset
-construction and preprocessing are provided in the Methods Section. The processed datasets used for training and evaluation will be
+construction and preprocessing are provided in Methods. The processed datasets used for training and evaluation will be
 made publicly available upon publication.
 
 \section*{Code Availability}
 
 The source code for {\n}, including data processing, model training, domain-specific GRPO adaptation, routing, and evaluation, is publicly available at \url{https://github.com/ziyaow1010/Reasoning_Length_Prediction}.
-
-% \section*{Acknowledgements}
 
 \section*{Author Contributions}
 
@@ -722,7 +625,7 @@ Z.W. and G.S. drafted the manuscript, and all authors reviewed and approved the 
 
 \section*{Competing Interests}
 
-A.L. serves as a Guest Editor for the Collection to which this manuscript is submitted and was not involved in the editorial handling, peer review, or decision-making process for this manuscript. The remaining authors declare no competing interests.
+A.L. is a Guest Editor of the Collection \emph{Securing the Core: Preventing Unauthorized Use and Manipulation of Large Language Models} in \emph{npj Artificial Intelligence}. A.L. was not involved in the journal's review of, or decisions related to, this manuscript. The other authors do not have a competing interest.
 
 \section*{Funding}
 
@@ -749,8 +652,29 @@ This research received no external funding.
 %% file, and delete the associated \verb+\bibliography+ commands.                            %%
 %%===========================================================================================%%
 
+\section*{Acknowledgements}
+Not applicable
+
+\clearpage
 \bibliography{sn-bibliography}% common bib file
 %% if required, the content of .bbl file can be included here once bbl is generated
 %%\input sn-article.bbl
+
+
+\clearpage
+\section*{Figure Legends}
+\renewcommand{\figurename}{Figure}
+
+\captionof{figure}{Users of commercial opaque large language model services cannot directly verify charges for hidden reasoning tokens. Dashed gray outlines separate the user and provider. Black arrows trace the user prompt through the provider's application programming interface (API) to the reasoning large language model (LLM) and show the return of answer tokens and charges. Document icons depict the answer and hidden reasoning tokens, and banknote icons depict charges. The red dashed box highlights the charge for hidden reasoning. The red cross marks the unavailable reasoning-token record and the question mark indicates that the associated charge cannot be directly verified. COLS, commercial opaque LLM services.}\label{fig:problem}
+
+\captionof{figure}{Domain routing improves reasoning-token prediction compared with training one adapter on merged data. \textbf{a)} Pass@1, the percentage of requests for which a single prediction meets the relative-error tolerance. \textbf{b)} Pass@5, the percentage of requests for which at least one of five sampled predictions meets that tolerance. The Qwen2.5-1.5B auditor is evaluated on general reasoning, mathematics, coding, and medical tasks. Blue-gray bars show the merged-data baseline, and tan bars show PALACE (Predictive Auditing of LLM APIs via Reasoning Token Count Estimation). Values above bars are percentages.}\label{fig:general_compare}
+
+\captionof{figure}{Prediction accuracy and verification detection rates across four reasoning domains. \textbf{a)} General reasoning. \textbf{b)} Mathematics. \textbf{c)} Coding. \textbf{d)} Medical reasoning. Each panel shows Qwen2.5-1.5B results. Red and green lines with circular markers show PALACE and low-rank adaptation (LoRA), respectively. Their vertical values are Pass@1, the fraction of requests for which the single prediction meets the relative-error tolerance on the horizontal axis. The blue line with circular markers shows CoIn, a reasoning-trace verification protocol. For CoIn, each horizontal value is a token-injection rate, defined as the ratio of injected tokens to original reasoning tokens, and the vertical value is the fraction of injected samples correctly flagged. PALACE, Predictive Auditing of LLM APIs via Reasoning Token Count Estimation.}\label{fig:rateacc}
+
+\captionof{figure}{The Qwen2.5-3B auditor's accuracy reward rises during group relative policy optimization (GRPO) on mathematics data. The blue line shows the training accuracy reward at each optimization step over one epoch on 90,000 examples. The blue dot marks the final recorded step.}\label{fig:grpo-math-qwen}
+
+\captionof{figure}{PALACE trains domain-specific auditing adapters and routes requests to estimate hidden reasoning-token counts. \textbf{a)} Training begins with general fine-tuning of an auditing model, followed by domain-specific group relative policy optimization (GRPO) and router training. The outlined head is the base model, the coral head is the fine-tuned model, the orange, teal, and blue thought bubbles depict distinct domain adapters, and the light-blue circle represents the router. \textbf{b)} At inference, the cloud represents the commercial service, and the document icon represents the prompt and final answer used by the auditor. The router selects a domain adapter, and the adapted model produces a reasoning-token estimate. Black arrows indicate processing or information flow, the coral dollar sign represents the estimated usage, and the red banknote represents the reported charge. Red arrows connect token-count validation to these quantities. The vertical teal dashed line divides the two panels. PALACE, Predictive Auditing of LLM APIs via Reasoning Token Count Estimation.}\label{fig:workflow}
+
+\captionof{figure}{The training prompt instructs the auditor to predict reasoning-token usage under group relative policy optimization (GRPO). The model receives the user problem and final solution and returns an integer token count in JavaScript Object Notation (JSON). Blue placeholders represent the problem and solution text. Orange placeholders represent the supplied token lengths of the problem and solution. The \texttt{<think>} and \texttt{<answer>} tags enclose the model-generated reasoning and final answer, respectively.}\label{fig:input_rl}
 
 \end{document}

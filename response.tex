@@ -3,49 +3,76 @@
 \usepackage[hidelinks]{hyperref}
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{6pt}
+\setlength{\emergencystretch}{1em}
 \begin{document}
 \begin{center}
-{\Large\bfseries Response to the Editor and Reviewers\par}
+{\Large\bfseries Response to Reviewers\par}
 \smallskip
 \emph{Auditing Hidden Reasoning Charges in Commercial LLM APIs through Token-Usage Prediction}
 \end{center}
 
-Dear Editor and Reviewers,
+Dear Reviewers,
 
-Thank you for the opportunity to revise our manuscript. PALACE estimates hidden reasoning-token usage from prompts and final answers and uses these estimates to monitor reported usage across workloads. The accompanying supplement reports direct detection experiments, a matched supervised baseline, and tests of calibration, feature use, and routing. At 30\% simulated overreporting, the domain-specific PALACE auditor detected 92.9\% of 50-request batches at an observed false-positive rate of 4.9\%.
-
-\section*{Response to the Editor}
-
-\paragraph{1. Scope and strength of the conclusions.}
-PALACE turns user-observable prompts and final answers into independent usage estimates that can be aggregated to monitor reported reasoning-token charges. The revision experiments quantify this capability on held-out workloads. We distinguish count prediction (the tolerance sweep in Figure~3) from detection of inflated reports (Supplementary Section~E). The Abstract, the Results subsection on simulated reporting discrepancies, and the Discussion report the workload-level detection result.
-
-\paragraph{2. Detection rate for simulated inflation.}
-We evaluated simulated overreporting directly on held-out data. For the PALACE domain-specific 1.5B auditor, 30\% overreporting was detected in 92.9\% of 50-request batches at 4.9\% observed false-positive rate (FPR), and in 99.7\% of 100-request batches at 5.2\% FPR. The batches mixed the four domains uniformly. At 10\% overreporting, the first tested size exceeding 90\% detection was 500 requests (96.5\% detection, 8.4\% FPR). Supplementary Section~E reports the workload-size sweep and observed PALACE FPR for each tested batch size.
-
-\paragraph{3. Limitations.}
-The detector uses reference counts matched to the audited model and configuration and sets its threshold on clean calibration traffic. Supplementary Section~E quantifies how reasoning-length and domain mix shifts affect the false-positive rate. In a workload with 70\% coding requests, domain-wise calibration reduced the 100-request false-positive rate from 25.9\% to 3.5\%. The evaluation uses trace-derived references and simulated reporting changes.
+Thank you for your feedback on our manuscript. Our point-by-point responses follow.
 
 \section*{Response to Reviewer 1}
+
+\begin{quote}\small
+\textbf{Recommendation}
+
+I recommend acceptance after optional minor revision. The paper addresses a timely and practically important problem: how users can audit hidden reasoning-token charges in commercial opaque LLM services when the reasoning trace itself is not visible. The proposed PALACE framework is well motivated, technically sensible, and supported by a broad set of experiments across mathematical, coding, medical, and general reasoning tasks. I found the paper interesting and potentially useful for improving transparency in LLM API billing.
+
+\textbf{Summary}
+
+The submission introduces PALACE, a user-side predictive auditing framework for estimating hidden reasoning-token usage from observable prompt–answer pairs. Rather than attempting to reconstruct the hidden chain of thought, PALACE learns to predict expected reasoning-token counts under a given model configuration. It combines domain-specific GRPO adaptation with a lightweight router that selects the relevant prediction module for each query. The authors evaluate the approach on four reasoning domains and compare against CoIn, MLP-based length predictors, direct LoRA fine-tuning, classification-style prediction, and merged-domain training. The results suggest that PALACE improves request-level prediction accuracy and maintains relatively stable aggregate error, making it suitable for detecting systematic token-reporting discrepancies.
+
+\textbf{Strengths}
+
+\begin{itemize}
+\item Important problem. The paper studies an emerging transparency issue in commercial LLM services: users may be charged for hidden reasoning tokens that they cannot directly observe or verify. This is an important and underexplored problem with clear practical relevance.
+\item Practical threat model. The paper acknowledges that exact verification is impossible without provider cooperation and instead formulates a realistic predictive auditing objective. The limited-cooperation assumption, where providers release a small auxiliary dataset for calibration, is reasonable and makes the proposal more deployable than methods requiring full access to internal traces.
+\item Clear methodological contribution. PALACE is more than a simple length-regression baseline. The use of semantic prompt–answer modeling, GRPO-based domain adaptation, and router-based module selection is a coherent design for handling heterogeneous reasoning domains.
+\item Broad empirical evaluation. The experiments cover multiple model sizes and several domains, including math, coding, medical, and general reasoning. The comparisons with LoRA, MLP, classification, merged-domain training, and CoIn help clarify where the proposed method improves over simpler alternatives.
+\item Useful aggregate-auditing perspective. The paper correctly emphasizes that billing discrepancies may be hard to assess at the single-query level but can become meaningful over large workloads. Reporting both average and aggregate error is therefore appropriate and important.
+\end{itemize}
+\textbf{Optional Minor Revisions and Suggestions}
+
+The paper is strong overall. I offer the following three focused suggestions to improve the precision and reproducibility of the presentation.
+\end{quote}
 
 Thank you for highlighting the practical relevance of hidden-token billing, the value of a limited-cooperation setting, and the importance of evaluating cumulative error. Your suggestions helped us make the protocol more precise.
 
 \paragraph{1. Evaluation metrics and auditing protocol.}
-\begin{quote}\small\itshape Please provide explicit formulas, units, and normalization for AVG and AGG error, and clearly distinguish token-count prediction accuracy from inflation-detection accuracy. For the simulated inflation experiments, a concise description of the inflation rates, decision thresholds, and false-positive/false-negative criteria would make the results easier to interpret.\end{quote}
+\begin{quote}\small
+Clarify the evaluation metrics and auditing protocol. Please provide explicit formulas, units, and normalization for AVG and AGG error, and clearly distinguish token-count prediction accuracy from inflation-detection accuracy. For the simulated inflation experiments, a concise description of the inflation rates, decision thresholds, and false-positive/false-negative criteria would make the results easier to interpret.
+\end{quote}
 \textbf{Response.} The revised Methods and Supplementary Section~A define AVG as mean absolute relative request-level error and AGG as the absolute difference between predicted and reference totals divided by the reference total. Both are percentages. Pass@33 applies a 33\% tolerance to the prediction error. The detection experiment holds predictions fixed, varies the reporting increase, and sets the decision threshold on clean calibration data. Flagged clean reports are false positives. Inflated reports at or below the threshold are false negatives. Supplementary Sections~B and E give the rule and results.
 
 \paragraph{2. Auxiliary data.}
-\begin{quote}\small\itshape Since deployment depends on a provider-released calibration set, please clarify its required size and contents, whether it must be specific to each model and configuration, and how representative it needs to be. A small ablation over calibration-set size would further strengthen the practical claim, if readily available.\end{quote}
+\begin{quote}\small
+Describe the auxiliary-data assumption more concretely. Since deployment depends on a provider-released calibration set, please clarify its required size and contents, whether it must be specific to each model and configuration, and how representative it needs to be. A small ablation over calibration-set size would further strengthen the practical claim, if readily available.
+\end{quote}
 \textbf{Response.} A reference example contains the request prompt, final answer, and a trusted reasoning-token count for the audited model and configuration. For threshold calibration, we tested 50--500 clean records and observed mean FPRs of 3--6\%, with greater variability at small calibration sizes. For estimator training, a nested data-size study on matched SFT showed improvements through the full training set in all domains. Calibration examples should reflect the deployment workload, including its domain mix and distribution of reasoning lengths. Supplementary Sections~D and E describe the reference data and report both size studies.
 
 \paragraph{3. Uncertainty and the counting protocol.}
-\begin{quote}\small\itshape Reporting standard deviations, confidence intervals, or multiple-seed results for the central comparisons would help establish the robustness of PALACE’s gains. It would also be useful to state the tokenizer/counting protocol, since reasoning-token count is the principal prediction target.\end{quote}
+\begin{quote}\small
+Add uncertainty information for the main results. Reporting standard deviations, confidence intervals, or multiple-seed results for the central comparisons would help establish the robustness of PALACE's gains. It would also be useful to state the tokenizer/counting protocol, since reasoning-token count is the principal prediction target.
+\end{quote}
 \textbf{Response.} We used 2,000 question-cluster bootstrap resamples. PALACE achieved 68.6\% Pass@33 across four domains (95\% CI [66.5, 70.7]), and matched SFT achieved \(72.2\pm0.7\%\) (mean and sample standard deviation across three independent seeds). The revision uses the released reference counts. General-domain preprocessing counts tokens in the first reasoning block with the \nolinkurl{deepseek-ai/DeepSeek-V3-0324} tokenizer. The count excludes delimiters and chat-template tokens. Supplementary Sections~D and E give the counting and evaluation protocols.
 
+\begin{quote}\small
+\textbf{Overall Assessment}
+
+This is a good paper on an important and timely topic. The central idea is compelling: even when hidden reasoning traces are unavailable, their expected token usage may still be statistically predictable from the observable prompt and answer. PALACE provides a practical and thoughtfully designed approach to this problem, and the empirical results are promising across several reasoning domains. The suggestions above are optional refinements that would improve clarity and reproducibility; they do not alter my positive assessment of the submission.
+\end{quote}
 
 \section*{Response to Reviewer 2}
+\begin{quote}\small\itshape
+The paper proposes PALACE, a user-side framework that predicts hidden reasoning-token counts from prompt–answer pairs using GRPO-trained domain-specific adapters and a router, for auditing commercial LLM services. The problem is important and the formulation is novel. However, several gaps must be addressed.
+\end{quote}
 Thank you for identifying gaps in the deployment assumptions, detection analysis, and baseline comparisons.
 
-\paragraph{1. Distance from real-world cases.}
+\paragraph{1. Distance from real world cases.}
 \begin{quote}\small\itshape
 The entire evaluation uses open-model reasoning, there are no experiments comparing PALACE estimates against token counts reported by an actual commercial API.
 
@@ -61,6 +88,7 @@ This author claims PALACE to be able to detect \emph{subtle} misreporting, but f
 \end{quote}
 \textbf{Response.} The 33\% prediction tolerance scores a count estimate against a known reference. It differs from the decision threshold, which is calibrated using clean requests. A fixed rule that flags reports above \(1.33\) times the prediction detected 47.6\% of 30\%-inflated reports but also flagged 21.8\% of clean reports. Calibrated single-request detection was modest, whereas aggregating 50 requests detected 92.9\% of 30\% shifts with 4.9\% observed FPR. The revised Methods define the two thresholds separately, and the Discussion reports the observed gap between individual and batch detection. Supplementary Section~E reports both operating points.
 
+\subsection*{3. Baseline adequacy.}
 \paragraph{3(a). CoIn as a baseline.}
 \begin{quote}\small\itshape
 CoIn is a cryptographic verification protocol based on hash trees and interactive auditor queries, not a model that produces token-count estimates from prompt--answer pairs. The paper does not describe how CoIn was adapted to output point estimates. Please explain this adaptation.
@@ -131,6 +159,10 @@ A sentence explaining how CoIn's Pass@1 was computed would help readers, as CoIn
 \paragraph{7(e). Short reasoning traces.}
 \begin{quote}\small\itshape Consider how the relative-error reward in Eq.\ (2) behaves for very short reasoning traces.\end{quote}
 \textbf{Response.} A one-token error reduces this relative-error reward by \(1/y\) before clipping, so the same absolute error has greater influence for shorter traces. The reduction is 1 at \(y=1\) and approximately 0.0042 at \(y=238\), the shortest reference in our test set. A zero-token reference has no relative-error denominator and calls for a separate exact-zero criterion.
+
+\begin{quote}\small
+Overall, this is a promising and well-motivated study, and addressing these points would substantially strengthen its contribution.
+\end{quote}
 
 Sincerely,\\
 The authors

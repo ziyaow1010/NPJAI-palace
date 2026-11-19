@@ -1,0 +1,37 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[hidelinks]{hyperref}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt}
+\begin{document}
+\begin{center}
+{\Large\bfseries Cover Letter\par}
+\smallskip
+\emph{Auditing Hidden Reasoning Charges in Commercial LLM APIs through Token-Usage Prediction}
+\end{center}
+
+Dear Dr. Liu,
+
+Thank you for the opportunity to revise our manuscript (ID b52fcf7f-1f82-46db-8e40-8e72a1746bdf). The manuscript was submitted to the \emph{Securing the Core: Preventing Unauthorized Use and Manipulation of Large Language Models} Collection in \emph{npj Artificial Intelligence}. We have revised the manuscript and provided point-by-point responses to the reviewers in the accompanying rebuttal letter. Our response to your editorial comment is below.
+
+\section*{Editorial Comment}
+\begin{quote}\small
+All reviewers found the research problem interesting and acknowledged the strengths of the manuscript. However, they also raised several concerns, most of which appear to be addressable through revision. Therefore, I invite the authors to address the reviewers' comments and provide a response before the manuscript can be considered further.
+\par
+Please ensure the results are accurately reported, any overstated conclusions are rewritten and the limitations of the work fully explained.
+\end{quote}
+
+\section*{Response to the Editor}
+
+\paragraph{1. Scope and strength of the conclusions.}
+PALACE turns user-observable prompts and final answers into independent usage estimates that can be aggregated to monitor reported reasoning-token charges. The revision experiments quantify this capability on held-out workloads. We distinguish count prediction (the tolerance sweep in Figure~3) from detection of inflated reports (Supplementary Section~E). The Abstract, the Results subsection on simulated reporting discrepancies, and the Discussion report the workload-level detection result.
+
+\paragraph{2. Detection rate for simulated inflation.}
+We evaluated simulated overreporting directly on held-out data. For the PALACE domain-specific 1.5B auditor, 30\% overreporting was detected in 92.9\% of 50-request batches at 4.9\% observed false-positive rate (FPR), and in 99.7\% of 100-request batches at 5.2\% FPR. The batches mixed the four domains uniformly. At 10\% overreporting, the first tested size exceeding 90\% detection was 500 requests (96.5\% detection, 8.4\% FPR). Supplementary Section~E reports the workload-size sweep and observed PALACE FPR for each tested batch size.
+
+\paragraph{3. Limitations.}
+The detector uses reference counts matched to the audited model and configuration and sets its threshold on clean calibration traffic. Supplementary Section~E quantifies how reasoning-length and domain mix shifts affect the false-positive rate. In a workload with 70\% coding requests, domain-wise calibration reduced the 100-request false-positive rate from 25.9\% to 3.5\%. The evaluation uses trace-derived references and simulated reporting changes.
+
+Sincerely,\\
+The authors
+\end{document}
