@@ -1,27 +1,75 @@
-\documentclass[11pt]{article}
-\usepackage[margin=1in]{geometry}
+\documentclass[11pt,letterpaper]{article}
+\usepackage[left=1.25in,right=1.25in,top=0.48in,bottom=0.72in]{geometry}
+\usepackage{graphicx}
+\IfFileExists{ebgaramond.sty}{\usepackage{ebgaramond}}{\usepackage{mathpazo}}
 \usepackage[hidelinks]{hyperref}
 \setlength{\parindent}{0pt}
-\setlength{\parskip}{6pt}
+\setlength{\parskip}{7pt}
+\pagestyle{empty}
+
+\newcommand{\manuscripttitle}{Auditing Hidden Reasoning Charges in Commercial LLM APIs through Token-Usage Prediction}
+\newcommand{\collectiontitle}{Securing the Core: Preventing Unauthorized Use and Manipulation of Large Language Models}
+
 \begin{document}
-\begin{center}
-{\Large\bfseries Cover Letter\par}
-\smallskip
-\emph{Auditing Hidden Reasoning Charges in Commercial LLM APIs through Token-Usage Prediction}
-\end{center}
+\raggedright
+\noindent\makebox[\textwidth][l]{%
+  \hspace*{-0.70in}%
+  \begin{minipage}[t]{3.25in}
+    \vspace{0pt}
+    \includegraphics[width=\linewidth]{umd-letterhead.png}
+  \end{minipage}%
+  \hspace{1.75in}%
+  \begin{minipage}[t]{2.25in}
+    \vspace{0pt}
+    \fontsize{10}{11}\selectfont
+    8223 Paint Branch Drive\\
+    Rm. 2365, A. V. Williams Building\\
+    University of Maryland\\
+    College Park, MD 20742\\
+    \href{https://www.ece.umd.edu}{www.ece.umd.edu}\\
+    301-405-6712\\
+    Email: \href{mailto:angliece@umd.edu}{angliece@umd.edu}
+  \end{minipage}%
+}\par
+\vspace{5pt}
+{\large\bfseries\scshape
+A. James Clark School of Engineering\\
+Glenn L. Martin Institute of Technology\par}
+\vspace{3pt}
+{\large\scshape Department of Electrical \& Computer Engineering\par}
+\vspace{9pt}
 
-Dear Dr. Liu,
+Dear Editors,
 
-Thank you for the opportunity to revise our manuscript (ID b52fcf7f-1f82-46db-8e40-8e72a1746bdf). The manuscript was submitted to the \emph{Securing the Core: Preventing Unauthorized Use and Manipulation of Large Language Models} Collection in \emph{npj Artificial Intelligence}. We have revised the manuscript and provided point-by-point responses to the reviewers in the accompanying rebuttal letter. Our response to your editorial comment is below.
+We are pleased to submit the revised manuscript entitled \textquotedblleft\manuscripttitle\textquotedblright{} (manuscript ID b52fcf7f-1f82-46db-8e40-8e72a1746bdf) for consideration as an Article in \emph{npj Artificial Intelligence} and for inclusion in the Collection \textquotedblleft\collectiontitle.\textquotedblright{}
 
-\section*{Editorial Comment}
+Commercial reasoning-model APIs charge users for tokens generated during internal reasoning. Because users cannot observe these tokens directly, they have limited ability to independently audit the reported charges.
+
+In this work, we introduce PALACE, a user-side predictive auditing framework that estimates hidden reasoning-token usage from observable prompt--answer pairs. PALACE combines domain adaptation based on group relative policy optimization with a lightweight task router to account for differences in reasoning patterns across tasks.
+
+We evaluate PALACE on mathematical, coding, medical, and general reasoning tasks. In the revised manuscript, we separately evaluate token-count prediction and the detection of simulated overreporting. Across the four domains, PALACE detected 92.9\% of batches with 30\% simulated overreporting at 50 requests per batch, with a 4.9\% false-positive rate.
+
+This work aligns with the Collection's focus on the transparency and accountability of commercial LLM services. It gives users a way to assess reported token usage without requiring access to internal reasoning traces during routine auditing.
+
+All authors have approved the revised manuscript, and it is not under consideration elsewhere. The source code is available at \href{https://github.com/ziyaow1010/Reasoning_Length_Prediction}{the PALACE GitHub repository}. I serve as a Guest Editor for this Collection and have not been involved in the editorial handling, peer review, or decisions related to this manuscript. We request independent handling under the journal's competing interests policy.
+
+Thank you for considering our revised manuscript.
+
+Sincerely,\par
+\vspace*{0.48in}
+Ang Li, Ph.D.\\
+Assistant Professor, Department of Electrical and Computer Engineering\\
+University of Maryland, College Park\\
+Email: \href{mailto:angliece@umd.edu}{angliece@umd.edu}
+
+\clearpage
+\vspace*{0.45in}
+\section*{Response to the Editor}
 \begin{quote}\small
 All reviewers found the research problem interesting and acknowledged the strengths of the manuscript. However, they also raised several concerns, most of which appear to be addressable through revision. Therefore, I invite the authors to address the reviewers' comments and provide a response before the manuscript can be considered further.
 \par
 Please ensure the results are accurately reported, any overstated conclusions are rewritten and the limitations of the work fully explained.
 \end{quote}
-
-\section*{Response to the Editor}
 
 \paragraph{1. Scope and strength of the conclusions.}
 PALACE turns user-observable prompts and final answers into independent usage estimates that can be aggregated to monitor reported reasoning-token charges. The revision experiments quantify this capability on held-out workloads. We distinguish count prediction (the tolerance sweep in Figure~3) from detection of inflated reports (Supplementary Section~E). The Abstract, the Results subsection on simulated reporting discrepancies, and the Discussion report the workload-level detection result.
@@ -32,6 +80,4 @@ We evaluated simulated overreporting directly on held-out data. For the PALACE d
 \paragraph{3. Limitations.}
 The detector uses reference counts matched to the audited model and configuration and sets its threshold on clean calibration traffic. Supplementary Section~E quantifies how reasoning-length and domain mix shifts affect the false-positive rate. In a workload with 70\% coding requests, domain-wise calibration reduced the 100-request false-positive rate from 25.9\% to 3.5\%. The evaluation uses trace-derived references and simulated reporting changes.
 
-Sincerely,\\
-The authors
 \end{document}
